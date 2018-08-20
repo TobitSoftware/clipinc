@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            margin: 10px 15px 5px 15px;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #5385b7;
+            white-space: nowrap;
+        }
+
+        .header img {
+            height: 64px;
+            margin: 0 20px 0 0;
+        }
+
+        ul {
+            font-size: 16px;
+            font-weight: bold;
+            list-style: none;
+            padding: 0;
+        }
+
+        li {
+            font-size: 14px;
+            font-weight: normal;
+            white-space: nowrap;
+            margin: 0 0 0 5px;
+        }
+
+        .extra {
+            font-family: sans-serif;
+            white-space: nowrap;
+            font-style: italic;
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <img id="icon" src="./images/clipinc-128.png"/>
+    <h1>clipinc&reg;</h1>
+</div>
+<div>
+    <div>
+        <button id="startButton">Start</button>
+        <button id="stopButton">Stop</button>
+    </div>
+    <div>
+        <input id="volume" type="range" disabled>
+    </div>
+</div>
+<ul> Hotkeys:
+    <li id="startKey">Ctrl + Shift + S to start capture on current tab</li>
+    <li id="endKey">Ctrl + Shift + A to stop capture on current tab</li>
+</ul>
+<p class="extra">Hotkeys may not work if another extension is using the same hotkeys</p>
+<p class="extra">Keep in mind that this extension is recording the output of the tab. If you<br>mute spotify or play it
+    from a different source, the mp3 will be empty.</p>
+<script src="popup.js"></script>
+</body>
+</html>

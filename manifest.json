@@ -1,0 +1,43 @@
+{
+  "name": "clipinc® for Spotify",
+  "version": "1.0",
+  "description": "Das kostenlose Tool schneidet den Stream mit und konvertiert Deine Musik in MP3-Dateien.",
+  "permissions": ["tabs", "tabCapture", "activeTab", "declarativeContent", "storage", "downloads", "downloads.shelf"],
+  "background": {
+    "scripts": ["recorder.js", "background.js"]
+  },
+  "browser_action": {
+    "default_icon": {
+      "16": "images/clipinc-16-disable.png",
+      "32": "images/clipinc-32-disable.png",
+      "48": "images/clipinc-48-disable.png",
+      "128": "images/clipinc-128-disable.png"
+    }
+  },
+  "content_scripts": [{
+    "matches": ["https://open.spotify.com/*"],
+    "js": ["content.js"]
+  }],
+  "icons": {
+    "16": "images/clipinc-16.png",
+    "32": "images/clipinc-32.png",
+    "48": "images/clipinc-48.png",
+    "128": "images/clipinc-128.png"
+  },
+  "manifest_version": 2,
+  "commands": {
+    "startCapture": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+S"
+      },
+      "description": "Start Capture"
+    },
+    "stopCapture": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+A"
+      },
+      "description": "Stop Capture"
+    }
+  },
+  "web_accessible_resources": ["inject.js"]
+}
