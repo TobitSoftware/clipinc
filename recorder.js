@@ -74,23 +74,19 @@ class Recorder {
             this.worker.terminate();
         }
 
-        this.onEncoderLoading(this, this.encoding);
-
         this.worker = new Worker("/workers/Mp3Worker.js");
         this.worker.onmessage = (event) => {
             const data = event.data;
             switch (data.command) {
-                case "loaded":
-                    this.onEncoderLoaded(this, this.encoding);
-                    break;
-                case "timeout":
-                    this.onTimeout(this);
-                    break;
                 case "progress":
                     this.onEncodingProgress(this, data.progress);
                     break;
                 case "complete":
                     this.onComplete(this, data.track);
+                    break;
+                case "error":
+                    this.onError(this, data.message);
+                    break;
             }
         };
 
@@ -104,14 +100,12 @@ class Recorder {
         });
     }
 
-    onEncoderLoading(recorder, encoding) {}
-
     onEncoderLoaded(recorder, encoding) {}
-
-    onTimeout(recorder) {}
 
     onEncodingProgress(recorder, progress) {}
 
     onComplete(recorder, blob) {}
+
+    onError(recorder, error) {}
 
 }

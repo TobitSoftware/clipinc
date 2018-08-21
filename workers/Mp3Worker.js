@@ -116,5 +116,3 @@ self.onmessage = function (event) {
             cleanup();
     }
 };
-
-self.postMessage({command: "loaded"});

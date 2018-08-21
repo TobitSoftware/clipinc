@@ -1,7 +1,7 @@
 {
   "name": "clipinc® for Spotify",
   "version": "1.0",
-  "description": "Das kostenlose Tool schneidet den Stream mit und konvertiert Deine Musik in MP3-Dateien.",
+  "description": "The free tool records the stream and converts your music to MP3 files.",
   "permissions": ["tabs", "tabCapture", "activeTab", "declarativeContent", "storage", "downloads", "downloads.shelf"],
   "background": {
     "scripts": ["recorder.js", "background.js"]

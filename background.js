@@ -179,14 +179,14 @@ function startCapture() {
             });
 
             chrome.storage.sync.get('tabId', ({tabId}) => {
-                chrome.tabs.sendMessage(tabId, "pause")
+                chrome.tabs.sendMessage(tabId, "pause");
             });
         };
 
         chrome.runtime.onMessage.addListener(stopCapture);
         chrome.commands.onCommand.addListener(stopCapture);
         chrome.storage.sync.get('tabId', ({tabId}) => {
-            chrome.tabs.sendMessage(tabId, "play")
+            chrome.tabs.sendMessage(tabId, "play");
         });
     });
 }

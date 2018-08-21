@@ -15,6 +15,7 @@
         const element = createElement.call(document, tag);
 
         if (tag === 'video') {
+            window._svp = element;
             element.addEventListener("play", dispatchToDocument);
             element.addEventListener("ended", dispatchToDocument);
             element.addEventListener("pause", dispatchToDocument);
