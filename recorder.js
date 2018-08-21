@@ -23,7 +23,7 @@ class Recorder {
         return this.processor != null;
     }
 
-    startRecording(track) {
+    startRecording() {
         if (this.isRecording()) {
             return;
         }
@@ -43,8 +43,7 @@ class Recorder {
         };
 
         this.worker.postMessage({
-            command: "start",
-            track
+            command: "start"
         });
     }
 
@@ -59,7 +58,7 @@ class Recorder {
         this.worker.postMessage({command: "cancel"});
     }
 
-    finishRecording() {
+    finishRecording(track) {
         if (!this.isRecording()) {
             return;
         }
@@ -67,16 +66,7 @@ class Recorder {
         this.input.disconnect();
         this.processor.disconnect();
         delete this.processor;
-        this.worker.postMessage({command: "finish"});
-    }
-
-    cancelEncoding() {
-        if (this.isRecording()) {
-            return;
-        }
-
-        this.onEncodingCanceled(this);
-        this.initWorker();
+        this.worker.postMessage({command: "finish", track});
     }
 
     initWorker() {
@@ -121,8 +111,6 @@ class Recorder {
     onTimeout(recorder) {}
 
     onEncodingProgress(recorder, progress) {}
-
-    onEncodingCanceled(recorder) {}
 
     onComplete(recorder, blob) {}
 

@@ -21,9 +21,11 @@ const volume = document.getElementById('volume');
 chrome.storage.sync.get('volume', (v) => {
     volume.value = v.volume;
 });
+volume.addEventListener('input', (event) => {
+    chrome.runtime.sendMessage({command: 'setVolume', data: event.target.value})
+});
 volume.addEventListener('change', (event) => {
-    console.log(event.target.value);
-    chrome.storage.sync.set({'volume': event.target.value}, () => chrome.runtime.sendMessage('setVolume'));
+    chrome.storage.sync.set({'volume': event.target.value});
 });
 
 function startCapture(send) {

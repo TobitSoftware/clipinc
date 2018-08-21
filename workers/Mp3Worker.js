@@ -6,7 +6,6 @@ let sampleRate = 44100,
     options = undefined,
     encoder = undefined,
     recBuffers = undefined,
-    track = undefined,
     bufferCount = 0;
 
 function error(message) {
@@ -22,9 +21,8 @@ function init(data) {
     }
 }
 
-function start(t) {
+function start() {
     recBuffers = [];
-    track = t
 }
 
 function record(buffer) {
@@ -36,16 +34,15 @@ function postProgress(progress) {
     self.postMessage({command: "progress", progress: progress});
 }
 
-function finish() {
+function finish(track) {
     if (recBuffers) {
         postProgress(0);
-        encoder = new Mp3LameEncoder(sampleRate, 256);
+        encoder = new Mp3LameEncoder(sampleRate, track.kbps);
         let timeout = Date.now() + 1000;
         while (recBuffers.length > 0) {
             encoder.encode(recBuffers.shift());
             let now = Date.now();
             if (now > timeout) {
-                console.log(bufferCount, recBuffers.length);
                 postProgress((bufferCount - recBuffers.length) / bufferCount);
                 timeout = now + 1000;
             }
@@ -53,8 +50,8 @@ function finish() {
         postProgress(1);
     }
 
+    // save variables locally so cleanup can be run
     const blob = encoder.finish("audio/mpeg");
-    const t = track;
     cleanup();
 
     const filePromise = new Promise((resolve) => {
@@ -63,32 +60,40 @@ function finish() {
         fileReader.readAsArrayBuffer(blob);
     });
 
-    const imagePromise = fetch(t.cover).then(res => res.arrayBuffer());
+    const imagePromise = fetch(track.cover).then(res => res.arrayBuffer()
+            .then((arrayBuffer) => ({
+                arrayBuffer,
+                mimeType: res.headers.get('Content-Type')
+            }))
+    );
 
     Promise.all([filePromise, imagePromise])
         .then(([file, cover]) => {
-            console.log('cover', cover);
-
             const writer = new ID3Writer(file);
-            writer.setFrame("TPE1", [t.artist])
-                .setFrame("TALB", t.title)
-                .setFrame("APIC", {
+            writer.setFrame("TPE1", [track.artist])
+                .setFrame("TIT2", track.title);
+
+            if (cover && cover.arrayBuffer && cover.arrayBuffer.byteLength > 0) {
+                writer.setFrame("APIC", {
                     type: 3,
                     data: cover.arrayBuffer,
-                    description: ''
+                    description: '',
+                    mimeType: cover.mimeType
                 });
+            }
+
             writer.addTag();
 
-            t.url = writer.getURL();
+            track.url = writer.getURL();
             self.postMessage({
                 command: "complete",
-                track: t
+                track
             });
         });
 }
 
 function cleanup() {
-    encoder = recBuffers = track = undefined;
+    encoder = recBuffers = undefined;
     bufferCount = 0;
 }
 
@@ -99,13 +104,13 @@ self.onmessage = function (event) {
             init(data);
             break;
         case "start":
-            start(data.track);
+            start();
             break;
         case "record":
             record(data.buffer);
             break;
         case "finish":
-            finish();
+            finish(data.track);
             break;
         case "cancel":
             cleanup();

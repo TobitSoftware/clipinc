@@ -2,6 +2,12 @@
     const createElement = document.createElement;
 
     function dispatchToDocument(event) {
+        // video tag dispatches pause and ended event when track ends
+        // filter pause event if track has ended so it can be downloaded
+        if (event.target.ended && event.type !== "ended") {
+            return;
+        }
+
         document.dispatchEvent(new Event(event.type, event))
     }
 
@@ -11,6 +17,7 @@
         if (tag === 'video') {
             element.addEventListener("play", dispatchToDocument);
             element.addEventListener("ended", dispatchToDocument);
+            element.addEventListener("pause", dispatchToDocument);
             element.addEventListener("abort", dispatchToDocument);
         }
 
