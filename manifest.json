@@ -39,5 +39,5 @@
       "description": "Stop Capture"
     }
   },
-  "web_accessible_resources": ["inject.js"]
+  "web_accessible_resources": ["inject.js", "images/clipinc-16.png"]
 }

@@ -73,3 +73,15 @@ s.onload = function () {
     document.addEventListener('abort', handleAbort);
 };
 (document.head || document.documentElement).appendChild(s);
+
+const btn = document.createElement("button");
+btn.classList.add("control-button", "control-button--circled");
+btn.setAttribute("title", "Record");
+btn.addEventListener('click', () => {
+    chrome.runtime.sendMessage("startCapture");
+});
+
+const playBtn = document.querySelector(`button[title="Play"]`);
+playBtn.parentNode.insertBefore(btn, playBtn);
+
+

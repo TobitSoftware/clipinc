@@ -1,75 +1,56 @@
 chrome.runtime.onInstalled.addListener(() => {
     chrome.storage.sync.set({volume: 50, isRecording: false});
+
+    chrome.tabs.onActivated.addListener(({tabId}) => {
+        chrome.storage.sync.set({tabId});
+        chrome.tabs.get(tabId, ({url}) => {
+            if (url.indexOf("https://open.spotify.com") === -1) {
+                chrome.browserAction.setIcon({
+                    path: {
+                        "16": "images/clipinc-16-disable.png",
+                        "32": "images/clipinc-32-disable.png",
+                        "48": "images/clipinc-48-disable.png",
+                        "128": "images/clipinc-128-disable.png"
+                    }
+                });
+            } else {
+                chrome.storage.sync.get("isRecording", ({isRecording}) => {
+                    if (isRecording) {
+                        chrome.browserAction.setIcon({
+                            path: {
+                                "16": "images/clipinc-16-record.png",
+                                "32": "images/clipinc-32-record.png",
+                                "48": "images/clipinc-48-record.png",
+                                "128": "images/clipinc-128-record.png"
+                            }
+                        });
+                    } else {
+                        chrome.browserAction.setIcon({
+                            path: {
+                                "16": "images/clipinc-16.png",
+                                "32": "images/clipinc-32.png",
+                                "48": "images/clipinc-48.png",
+                                "128": "images/clipinc-128.png"
+                            }
+                        });
+                    }
+                });
+            }
+        });
+    });
+
+    chrome.browserAction.onClicked.addListener(() => {
+        //chrome.tabs.create({
+        //    url: 'https://open.spotify.com'
+        //});
+
+        startCapture();
+    });
+
+    chrome.commands.onCommand.addListener(handleStartCapture);
+
+    chrome.runtime.onMessage.addListener(handleStartCapture);
 });
-
-chrome.tabs.onActivated.addListener(({tabId}) => {
-    chrome.storage.sync.set({tabId});
-    chrome.tabs.get(tabId, ({url}) => {
-        if (url.indexOf("https://open.spotify.com") === -1) {
-            chrome.browserAction.setPopup({
-                popup: ''
-            });
-
-            chrome.browserAction.setIcon({
-                path: {
-                    "16": "images/clipinc-16-disable.png",
-                    "32": "images/clipinc-32-disable.png",
-                    "48": "images/clipinc-48-disable.png",
-                    "128": "images/clipinc-128-disable.png"
-                }
-            });
-        } else {
-            chrome.browserAction.setPopup({
-                popup: 'popup.html'
-            });
-
-            chrome.storage.sync.get("isRecording", ({isRecording}) => {
-                if (isRecording) {
-                    chrome.browserAction.setIcon({
-                        path: {
-                            "16": "images/clipinc-16-record.png",
-                            "32": "images/clipinc-32-record.png",
-                            "48": "images/clipinc-48-record.png",
-                            "128": "images/clipinc-128-record.png"
-                        }
-                    });
-                } else {
-                    chrome.browserAction.setIcon({
-                        path: {
-                            "16": "images/clipinc-16.png",
-                            "32": "images/clipinc-32.png",
-                            "48": "images/clipinc-48.png",
-                            "128": "images/clipinc-128.png"
-                        }
-                    });
-                }
-            });
-        }
-    });
-});
-
-chrome.browserAction.onClicked.addListener(() => {
-    chrome.tabs.create({
-        url: 'https://open.spotify.com'
-    });
-
-    chrome.browserAction.setPopup({
-        popup: 'popup.html'
-    });
-
-    chrome.browserAction.setIcon({
-        path: {
-            "16": "images/clipinc-16.png",
-            "32": "images/clipinc-32.png",
-            "48": "images/clipinc-48.png",
-            "128": "images/clipinc-128.png"
-        }
-    });
-});
-
-chrome.commands.onCommand.addListener(handleStartCapture);
-
-chrome.runtime.onMessage.addListener(handleStartCapture);
 
 function handleStartCapture(command) {
     console.log(command);
