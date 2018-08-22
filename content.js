@@ -3,15 +3,19 @@ function handlePlay() {
 }
 
 function handleEnded() {
-    chrome.runtime.sendMessage({command: "ended", data: getTrackInfo()})
+    chrome.runtime.sendMessage({command: "ended", data: {track: getTrackInfo()}});
 }
 
 function handleAbort() {
-    chrome.runtime.sendMessage({command: "abort", data: {}})
+    chrome.runtime.sendMessage({command: "abort", data: {}});
 }
 
 function handlePause() {
-    chrome.runtime.sendMessage({command: "pause", data: {}})
+    chrome.runtime.sendMessage({command: "pause", data: {}});
+}
+
+function handleVolumeInput(event) {
+    chrome.runtime.sendMessage({command: "setVolume", data: {volume: parseFloat(event.target.value)}});
 }
 
 function getTrackInfo() {
@@ -39,13 +43,33 @@ function getVolume() {
 
 function setVolume(volume) {
     const e = new CustomEvent('setvolume', {
-        detail: { volume }
+        detail: {volume}
     });
     document.dispatchEvent(e)
 }
 
 function hijackVolumeControl() {
+    const input = document.createElement('input');
+    input.type = 'range';
+    input.min = 0;
+    input.max = 1;
+    input.step = 0.01;
+    input.value = JSON.parse(localStorage.getItem('playback')).volume.toFixed(2);
+    input.classList.add('slider');
+    input.addEventListener('input', handleVolumeInput);
 
+    const volumeBar = document.createElement('div');
+    volumeBar.appendChild(input);
+    volumeBar.classList.add('volume-bar', 'volume-bar--hijacked');
+
+    document.querySelector('.volume-bar').parentNode.appendChild(volumeBar);
+    document.querySelector('.volume-bar').style.display = 'none';
+}
+
+function releaseVolumeControl() {
+    const volumeBar = document.querySelector('.volume-bar--hijacked');
+    volumeBar.parentNode.removeChild(volumeBar);
+    document.querySelector('.volume-bar').style.display = '';
 }
 
 function hijackPlayer() {
@@ -70,18 +94,20 @@ chrome.runtime.onMessage.addListener(({command, data}, sender, sendResponse) => 
     switch (command) {
         case 'prepareRecording':
             const oldVolume = getVolume();
+            hijackVolumeControl();
             setVolume(1);
             sendResponse({volume: oldVolume});
             break;
         case 'startRecording':
-            const play = document.querySelector(".control-button[title=\"Play\"]");
+            const play = document.querySelector(".control-button.spoticon-play-16");
             if (play) {
                 play.click();
             }
             break;
         case 'stopRecording':
+            releaseVolumeControl();
             setVolume(data.volume);
-            const pause = document.querySelector(".control-button[title=\"Pause\"]");
+            const pause = document.querySelector(".control-button.spoticon-pause-16");
             if (pause) {
                 pause.click();
             }

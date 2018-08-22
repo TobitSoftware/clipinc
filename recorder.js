@@ -99,8 +99,6 @@ class Recorder {
         });
     }
 
-    onEncoderLoaded(recorder, encoding) {}
-
     onEncodingProgress(recorder, progress) {}
 
     onComplete(recorder, blob) {}

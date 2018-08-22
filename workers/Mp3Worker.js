@@ -61,10 +61,10 @@ function finish(track) {
     });
 
     const imagePromise = fetch(track.cover).then(res => res.arrayBuffer()
-            .then((arrayBuffer) => ({
-                arrayBuffer,
-                mimeType: res.headers.get('Content-Type')
-            }))
+        .then((arrayBuffer) => ({
+            arrayBuffer,
+            mimeType: res.headers.get('Content-Type')
+        }))
     );
 
     Promise.all([filePromise, imagePromise])

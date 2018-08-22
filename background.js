@@ -88,6 +88,10 @@ function startCapture() {
 
                 const mediaListener = ({command, data}) => {
                     switch (command) {
+                        case "setVolume":
+                            console.log("set volume", data);
+                            audio.volume = 0;
+                            break;
                         case "play":
                             console.log("start recording");
                             mediaRecorder.startRecording();
@@ -96,13 +100,13 @@ function startCapture() {
                             console.log("finish recording");
 
                             // used to skip ads
-                            if (data.duration <= 30) {
+                            if (data.track.duration <= 30) {
                                 console.log("track is shorter or equal than 30sec, discarding");
                                 mediaRecorder.cancelRecording();
                                 break;
                             }
 
-                            mediaRecorder.finishRecording(data);
+                            mediaRecorder.finishRecording(data.track);
                             break;
                         case "pause":
                         case "abort":
