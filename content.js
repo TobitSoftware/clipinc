@@ -21,24 +21,44 @@ function getTrackInfo() {
     const artist = nowPlayingBar.querySelector(".track-info__artists a").innerText;
     const duration = nowPlayingBar.querySelector(".progress-bar + .playback-bar__progress-time").innerText;
     const cover = nowPlayingBar.querySelector(".cover-art-image").style.backgroundImage;
+    const isPremium = document.querySelector(".main-view-container--has-ads") === null;
 
     return {
         title,
         artist,
         duration: durationToSeconds(duration),
         cover: cover.substring("url(\"".length, cover.length - "\")".length),
-        kbps: document.querySelector(".main-view-container--has-ads") === null ? 256 : 128
+        kbps: isPremium ? 256 : 128
     };
 }
 
-function enableVolume() {
-    document.querySelector('.volume-bar').style.opacity = "";
-    document.querySelector('.volume-bar').style.pointerEvents = "";
+function getVolume() {
+    const v = JSON.parse(localStorage.getItem('playback')).volume;
+    return Math.max(0, Math.min(1, v * v * v));
 }
 
-function disableVolume() {
-    document.querySelector('.volume-bar').style.opacity = "0.5";
-    document.querySelector('.volume-bar').style.pointerEvents = "none";
+function setVolume(volume) {
+    const e = new CustomEvent('setvolume', {
+        detail: { volume }
+    });
+    document.dispatchEvent(e)
+}
+
+function hijackVolumeControl() {
+
+}
+
+function hijackPlayer() {
+    const s = document.createElement('script');
+    s.src = chrome.extension.getURL('inject.js');
+    s.onload = function () {
+        this.remove();
+        document.addEventListener('play', handlePlay);
+        document.addEventListener('ended', handleEnded);
+        document.addEventListener('pause', handlePause);
+        document.addEventListener('abort', handleAbort);
+    };
+    (document.head || document.documentElement).appendChild(s);
 }
 
 function durationToSeconds(duration) {
@@ -46,42 +66,27 @@ function durationToSeconds(duration) {
     return parseInt(times[0], 10) * 60 + parseInt(times[1], 10);
 }
 
-chrome.runtime.onMessage.addListener((command) => {
-    let button;
-
-    if (command === 'play') {
-        disableVolume();
-        button = document.querySelector(".control-button[title=\"Play\"]");
-    } else if (command === 'pause') {
-        enableVolume();
-        button = document.querySelector(".control-button[title=\"Pause\"]");
-    }
-
-    if (button) {
-        button.click();
+chrome.runtime.onMessage.addListener(({command, data}, sender, sendResponse) => {
+    switch (command) {
+        case 'prepareRecording':
+            const oldVolume = getVolume();
+            setVolume(1);
+            sendResponse({volume: oldVolume});
+            break;
+        case 'startRecording':
+            const play = document.querySelector(".control-button[title=\"Play\"]");
+            if (play) {
+                play.click();
+            }
+            break;
+        case 'stopRecording':
+            setVolume(data.volume);
+            const pause = document.querySelector(".control-button[title=\"Pause\"]");
+            if (pause) {
+                pause.click();
+            }
+            break;
     }
 });
 
-//inject script to hijack player
-const s = document.createElement('script');
-s.src = chrome.extension.getURL('inject.js');
-s.onload = function () {
-    this.remove();
-    document.addEventListener('play', handlePlay);
-    document.addEventListener('ended', handleEnded);
-    document.addEventListener('pause', handlePause);
-    document.addEventListener('abort', handleAbort);
-};
-(document.head || document.documentElement).appendChild(s);
-
-const btn = document.createElement("button");
-btn.classList.add("control-button", "control-button--circled");
-btn.setAttribute("title", "Record");
-btn.addEventListener('click', () => {
-    chrome.runtime.sendMessage("startCapture");
-});
-
-const playBtn = document.querySelector(`button[title="Play"]`);
-playBtn.parentNode.insertBefore(btn, playBtn);
-
-
+hijackPlayer();

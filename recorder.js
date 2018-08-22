@@ -1,7 +1,6 @@
 const OPTIONS = {
     numChannels: 2,
-    bufferSize: undefined,
-    bitRate: 256
+    bufferSize: undefined
 };
 
 class Recorder {
