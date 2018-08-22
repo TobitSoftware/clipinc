@@ -33,7 +33,6 @@ function handleIconClick() {
         chrome.tabs.getSelected((tab) => {
             if (tabId && tab.id !== tabId) {
                 chrome.tabs.get(tabId, ({index}) => {
-                    console.log("highlight!", index);
                     chrome.tabs.highlight({
                         tabs: [index]
                     });
@@ -44,6 +43,7 @@ function handleIconClick() {
                     url: 'https://open.spotify.com'
                 });
             } else if (!isRecording) {
+                console.log("startCapture");
                 startCapture()
             }
         });
@@ -53,10 +53,7 @@ function handleIconClick() {
 function handleRemove(id) {
     chrome.storage.local.get(['tabId'], ({tabId}) => {
         if (id === tabId) {
-            console.log("current tab removed");
-            chrome.storage.local.set({isRecording: false, tabId: 0}, () => {
-                chrome.storage.local.get(["isRecording", "tabId"], console.log.bind(console));
-            });
+            chrome.storage.local.set({isRecording: false, tabId: 0});
         }
     });
 }
@@ -64,7 +61,6 @@ function handleRemove(id) {
 function startCapture() {
     chrome.tabs.getSelected((tab) => {
         chrome.tabs.sendMessage(tab.id, {command: "prepareRecording"}, {}, (response) => {
-            console.log(response);
             chrome.tabCapture.capture({audio: true}, (stream) => {
                 if (!stream) {
                     console.error(chrome.runtime.lastError);
@@ -89,8 +85,8 @@ function startCapture() {
                 const mediaListener = ({command, data}) => {
                     switch (command) {
                         case "setVolume":
-                            console.log("set volume", data);
-                            audio.volume = 0;
+                            console.log("set volume to", data.volume);
+                            audio.volume = data.volume;
                             break;
                         case "play":
                             console.log("start recording");
@@ -123,6 +119,7 @@ function startCapture() {
                     if (currentTab.id !== tab.id) {
                         return;
                     }
+                    console.log("stopCapture");
 
                     chrome.runtime.onMessage.removeListener(mediaListener);
                     chrome.downloads.onChanged.removeListener(cleanDownloadShelf);
