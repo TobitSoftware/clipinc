@@ -181,10 +181,10 @@ function download(recorder, track) {
 
 
     if (track.playlist || track.album) {
-        dir += `/${(track.playlist || track.album).replace(regex, ' ')}`;
+        dir += `/${(track.playlist || track.album).replace(regex, ' ').trim()}`;
     }
 
-    let filename = `${dir}/${track.artist.replace(regex, ' ')} - ${track.title.replace(regex, ' ')}.mp3`;
+    let filename = `${dir}/${track.artist.replace(regex, ' ').trim()} - ${track.title.replace(regex, ' ').trim()}.mp3`;
     console.log("download mp3: ", filename);
     chrome.downloads.download({url: track.url, filename });
 }
