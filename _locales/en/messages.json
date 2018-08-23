@@ -1,6 +1,6 @@
 {
   "name": {
-    "message": "clipinc® for Spotify"
+    "message": "clipinc®"
   },
   "nameRecording": {
     "message": "clipinc®: Recording in progress. Cancel?"
@@ -9,6 +9,6 @@
     "message": "clipinc®: Start recording"
   },
   "description": {
-    "message": "The free tool records the stream and converts your music to MP3 files."
+    "message": "Hol Dir die Songs von Spotify als lupenreinen MP3-Mitschnitt auf Deine Festplatte"
   }
 }
