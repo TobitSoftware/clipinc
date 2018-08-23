@@ -116,3 +116,12 @@ chrome.runtime.onMessage.addListener(({command, data}, sender, sendResponse) => 
 });
 
 hijackPlayer();
+
+//event listener to increase volume for first track
+document.addEventListener('initplayer', () => {
+    chrome.storage.local.get("isRecording", ({isRecording}) => {
+        if (isRecording) {
+            setVolume(1);
+        }
+    })
+});

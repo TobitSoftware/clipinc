@@ -27,6 +27,9 @@
             element.addEventListener("abort", dispatchToDocument);
 
             document.addEventListener("setvolume", (event) => element.volume = event.detail.volume);
+
+            const e = new CustomEvent("initplayer");
+            document.dispatchEvent(e)
         }
 
         return element
