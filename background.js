@@ -178,8 +178,8 @@ function download(recorder, track) {
 
     let dir = "clipinc";
 
-    if (track.playlist) {
-        dir += `/${track.playlist}`;
+    if (track.playlist || track.album) {
+        dir += `/${track.playlist || track.album}`;
     }
 
     let filename = `${dir}/${track.artist.replace(/[\\/:*?"<>|]/g, ' ')} - ${track.title.replace(/[\\/:*?"<>|]/g, ' ')}.mp3`;

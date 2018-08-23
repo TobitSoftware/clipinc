@@ -26,8 +26,12 @@ function getTrackInfo() {
     const duration = nowPlayingBar.querySelector(".progress-bar + .playback-bar__progress-time").innerText;
     const cover = nowPlayingBar.querySelector(".cover-art-image").style.backgroundImage;
     const isPremium = document.querySelector(".main-view-container--has-ads") === null;
-    const isPlaylist = document.querySelector(".icon.playing-icon.spoticon-volume-16") !== null;
-    const lastPlaylist = JSON.parse(localStorage.getItem("playbackHistory"))[0].name;
+    const isGroup = document.querySelector(".icon.playing-icon.spoticon-volume-16") !== null;
+    const type = document.querySelector(".icon.playing-icon.spoticon-volume-16 + .type");
+    const isAlbum = type && type.innerText.toLocaleLowerCase() === "album";
+    const isPlaylist = type && type.innerText.toLocaleLowerCase() === "playlist";
+    const lastPlayed = JSON.parse(localStorage.getItem("playbackHistory"))[0].name;
+
 
     return {
         artist,
@@ -35,7 +39,8 @@ function getTrackInfo() {
         duration: durationToSeconds(duration),
         cover: cover.substring("url(\"".length, cover.length - "\")".length),
         kbps: isPremium ? 256 : 128,
-        playlist: isPlaylist ? lastPlaylist : undefined
+        playlist: isGroup && isPlaylist ? lastPlayed : undefined,
+        album: isGroup && isAlbum ? lastPlayed : undefined
     };
 }
 
