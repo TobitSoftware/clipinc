@@ -179,6 +179,10 @@ function setDefautIcon() {
             "128": "images/clipinc-128.png"
         }
     });
+
+    chrome.browserAction.setTitle({
+        title: chrome.i18n.getMessage("nameStart")
+    });
 }
 
 function setRecordingIcon() {
@@ -190,6 +194,10 @@ function setRecordingIcon() {
             "128": "images/clipinc-128-record.png"
         }
     });
+
+    chrome.browserAction.setTitle({
+        title: chrome.i18n.getMessage("nameRecording")
+    });
 }
 
 function setDisabledIcon() {
@@ -200,5 +208,9 @@ function setDisabledIcon() {
             "48": "images/clipinc-48-disable.png",
             "128": "images/clipinc-128-disable.png"
         }
+    });
+
+    chrome.browserAction.setTitle({
+        title: chrome.i18n.getMessage("name")
     });
 }
