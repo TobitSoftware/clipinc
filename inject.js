@@ -7,8 +7,12 @@
         if (event.target.ended && event.type !== "ended") {
             return;
         }
-
-        document.dispatchEvent(new Event(event.type, event))
+        const e = new CustomEvent(event.type, {
+            detail: {
+                volume: event.target.volume
+            }
+        });
+        document.dispatchEvent(e)
     }
 
     document.createElement = function (tag) {
@@ -16,10 +20,16 @@
 
         if (tag === 'video') {
             window._svp = element;
+
             element.addEventListener("play", dispatchToDocument);
             element.addEventListener("ended", dispatchToDocument);
             element.addEventListener("pause", dispatchToDocument);
             element.addEventListener("abort", dispatchToDocument);
+
+            document.addEventListener("setvolume", (event) => element.volume = event.detail.volume);
+
+            const e = new CustomEvent("initplayer");
+            document.dispatchEvent(e)
         }
 
         return element

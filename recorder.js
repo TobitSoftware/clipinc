@@ -1,7 +1,6 @@
 const OPTIONS = {
     numChannels: 2,
-    bufferSize: undefined,
-    bitRate: 256
+    bufferSize: undefined
 };
 
 class Recorder {
@@ -99,8 +98,6 @@ class Recorder {
             options: OPTIONS
         });
     }
-
-    onEncoderLoaded(recorder, encoding) {}
 
     onEncodingProgress(recorder, progress) {}
 

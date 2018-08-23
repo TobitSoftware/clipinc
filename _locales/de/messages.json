@@ -1,0 +1,14 @@
+{
+  "name": {
+    "message": "clipinc® for Spotify"
+  },
+  "nameRecording": {
+    "message": "clipinc®: Aufnahme läuft. Beenden?"
+  },
+  "nameStart": {
+    "message": "clipinc®: Aufnahme starten"
+  },
+  "description": {
+    "message": "The free tool records the stream and converts your music to MP3 files."
+  }
+}

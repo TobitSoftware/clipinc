@@ -1,7 +1,7 @@
 {
-  "name": "clipinc® for Spotify",
+  "name": "__MSG_name__",
   "version": "1.0",
-  "description": "The free tool records the stream and converts your music to MP3 files.",
+  "description": "__MSG_description__",
   "permissions": ["tabs", "tabCapture", "activeTab", "declarativeContent", "storage", "downloads", "downloads.shelf"],
   "background": {
     "scripts": ["recorder.js", "background.js"]
@@ -16,7 +16,8 @@
   },
   "content_scripts": [{
     "matches": ["https://open.spotify.com/*"],
-    "js": ["content.js"]
+    "js": ["content.js"],
+    "css": ["slider.css"]
   }],
   "icons": {
     "16": "images/clipinc-16.png",
@@ -25,19 +26,7 @@
     "128": "images/clipinc-128.png"
   },
   "manifest_version": 2,
-  "commands": {
-    "startCapture": {
-      "suggested_key": {
-        "default": "Ctrl+Shift+S"
-      },
-      "description": "Start Capture"
-    },
-    "stopCapture": {
-      "suggested_key": {
-        "default": "Ctrl+Shift+A"
-      },
-      "description": "Stop Capture"
-    }
-  },
-  "web_accessible_resources": ["inject.js"]
+  "web_accessible_resources": ["inject.js"],
+  "default_locale": "en"
 }
+
