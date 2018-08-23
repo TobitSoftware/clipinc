@@ -167,7 +167,13 @@ function cleanDownloadShelf(delta) {
 }
 
 function download(recorder, track) {
-    chrome.downloads.download({url: track.url, filename: `clipinc/${track.artist} - ${track.title}.mp3`});
+    let dir = "clipinc";
+
+    if (track.playlist) {
+        dir += `/${track.playlist}`;
+    }
+
+    chrome.downloads.download({url: track.url, filename: `${dir}/${track.artist} - ${track.title}.mp3`});
 }
 
 function setDefautIcon() {
