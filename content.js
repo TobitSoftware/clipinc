@@ -44,6 +44,10 @@ function getTrackInfo() {
     };
 }
 
+function getIsLocalDevice() {
+    return document.querySelector(".connect-bar") === null;
+}
+
 function getVolume() {
     const v = JSON.parse(localStorage.getItem('playback')).volume;
     return Math.max(0, Math.min(1, v * v * v));
@@ -101,10 +105,11 @@ function durationToSeconds(duration) {
 chrome.runtime.onMessage.addListener(({command, data}, sender, sendResponse) => {
     switch (command) {
         case 'prepareRecording':
+            const error = !getIsLocalDevice() ? "cannot record from remote device" : undefined;
             const oldVolume = getVolume();
             hijackVolumeControl();
             setVolume(1);
-            sendResponse({volume: oldVolume});
+            sendResponse({volume: oldVolume, error });
             break;
         case 'startRecording':
             const play = document.querySelector(".control-button.spoticon-play-16");

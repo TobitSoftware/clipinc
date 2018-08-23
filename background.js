@@ -77,6 +77,11 @@ function handleIconClick() {
 function startCapture() {
     chrome.tabs.getSelected((tab) => {
         chrome.tabs.sendMessage(tab.id, {command: "prepareRecording"}, {}, (response) => {
+            if (response.error) {
+                console.error(response.error);
+                return;
+            }
+
             chrome.tabCapture.capture({audio: true}, (stream) => {
                 if (!stream) {
                     console.error(chrome.runtime.lastError);
