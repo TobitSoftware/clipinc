@@ -86,12 +86,6 @@ function finish(track) {
                 writer.setFrame("TALB", track.album);
             }
 
-            if (track.playlist) {
-                writer.setFrame("COMM", {
-                    "text": `Playlist: ${track.playlist}`
-                });
-            }
-
             writer.addTag();
 
             track.url = writer.getURL();
