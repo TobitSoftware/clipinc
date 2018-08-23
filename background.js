@@ -133,7 +133,6 @@ function startCapture() {
                     console.log("clean up");
 
                     chrome.runtime.onMessage.removeListener(mediaListener);
-                    chrome.downloads.onChanged.removeListener(cleanDownloadShelf);
                     chrome.browserAction.onClicked.removeListener(handleStopIconClick);
 
                     mediaRecorder.cancelRecording();
@@ -149,7 +148,6 @@ function startCapture() {
                 });
 
                 chrome.runtime.onMessage.addListener(mediaListener);
-                chrome.downloads.onChanged.addListener(cleanDownloadShelf);
                 chrome.browserAction.onClicked.addListener(handleStopIconClick);
                 chrome.tabs.sendMessage(tab.id, {command: "startRecording"});
 
@@ -161,12 +159,23 @@ function startCapture() {
 }
 
 function cleanDownloadShelf(delta) {
-    if (delta && delta.state && delta.state.current === "complete") {
-        chrome.downloads.erase({id: delta.id});
+    if (!delta || !delta.state || delta.state.current !== "complete") {
+        return;
     }
+
+    chrome.downloads.search({id: delta.id}, (downloads) => {
+        if (downloads[0].filename.indexOf('clipinc') === -1) {
+            return;
+        }
+
+        chrome.downloads.erase({id: delta.id});
+        chrome.downloads.onChanged.removeListener(cleanDownloadShelf);
+    });
 }
 
 function download(recorder, track) {
+    chrome.downloads.onChanged.addListener(cleanDownloadShelf);
+
     let dir = "clipinc";
 
     if (track.playlist) {
