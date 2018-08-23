@@ -182,8 +182,7 @@ function download(recorder, track) {
         dir += `/${track.playlist}`;
     }
 
-    let filename = `${dir}/${track.artist} - ${track.title}.mp3`;
-    filename = filename.replace(/[\\/:*?"<>|]/g, ' ');
+    let filename = `${dir}/${track.artist.replace(/[\\/:*?"<>|]/g, ' ')} - ${track.title.replace(/[\\/:*?"<>|]/g, ' ')}.mp3`;
     console.log("download mp3: ", filename);
     chrome.downloads.download({url: track.url, filename });
 }
