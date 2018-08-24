@@ -61,6 +61,10 @@ function setVolume(volume) {
 }
 
 function hijackVolumeControl() {
+    if (document.querySelector(".volume-bar--hijacked") !== null) {
+        return;
+    }
+
     const input = document.createElement('input');
     input.type = 'range';
     input.min = 0;
@@ -80,7 +84,11 @@ function hijackVolumeControl() {
 
 function releaseVolumeControl() {
     const volumeBar = document.querySelector('.volume-bar--hijacked');
-    volumeBar.parentNode.removeChild(volumeBar);
+
+    if (volumeBar !== null) {
+        volumeBar.parentNode.removeChild(volumeBar);
+    }
+
     document.querySelector('.volume-bar').style.display = '';
 }
 
