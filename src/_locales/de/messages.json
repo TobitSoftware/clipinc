@@ -3,13 +3,13 @@
     "message": "clipinc®"
   },
   "nameRecording": {
-    "message": "clipinc®: Aufnahme läuft. Beenden?"
+    "message": "clipinc®: Aufnahme läuft, Beenden"
   },
   "nameStart": {
     "message": "clipinc®: Aufnahme starten"
   },
   "description": {
-    "message": "Hol Dir die Songs von Spotify als lupenreinen MP3-Mitschnitt auf Deine Festplatte"
+    "message": "Hol Dir die Songs von Spotify als lupenreinen MP3-Mitschnitt auf Deine Festplatte!"
   },
   "errorChangeDevice": {
     "message": "Wiedergabe auf diesen Webbrowser umstellen, um die Ausgabe zu starten."

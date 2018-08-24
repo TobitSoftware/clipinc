@@ -38,11 +38,11 @@ class Recorder {
             for (let ch = 0; ch < OPTIONS.numChannels; ++ch) {
                 buffer[ch] = event.inputBuffer.getChannelData(ch);
             }
-            worker.postMessage({command: "record", buffer: buffer});
+            worker.postMessage({command: 'record', buffer: buffer});
         };
 
         this.worker.postMessage({
-            command: "start"
+            command: 'start'
         });
     }
 
@@ -54,7 +54,7 @@ class Recorder {
         this.input.disconnect();
         this.processor.disconnect();
         delete this.processor;
-        this.worker.postMessage({command: "cancel"});
+        this.worker.postMessage({command: 'cancel'});
     }
 
     finishRecording(track) {
@@ -65,7 +65,7 @@ class Recorder {
         this.input.disconnect();
         this.processor.disconnect();
         delete this.processor;
-        this.worker.postMessage({command: "finish", track});
+        this.worker.postMessage({command: 'finish', track});
     }
 
     initWorker() {
@@ -73,24 +73,24 @@ class Recorder {
             this.worker.terminate();
         }
 
-        this.worker = new Worker("/workers/Mp3Worker.js");
+        this.worker = new Worker('/workers/Mp3Worker.js');
         this.worker.onmessage = (event) => {
             const data = event.data;
             switch (data.command) {
-                case "progress":
+                case 'progress':
                     this.onEncodingProgress(this, data.progress);
                     break;
-                case "complete":
+                case 'complete':
                     this.onComplete(this, data.track);
                     break;
-                case "error":
+                case 'error':
                     this.onError(this, data.message);
                     break;
             }
         };
 
         this.worker.postMessage({
-            command: "init",
+            command: 'init',
             config: {
                 sampleRate: this.context.sampleRate,
                 numChannels: OPTIONS.numChannels
@@ -104,5 +104,4 @@ class Recorder {
     onComplete(recorder, blob) {}
 
     onError(recorder, error) {}
-
 }

@@ -1,5 +1,5 @@
-importScripts("/../encoders/Mp3Encoder.min.js");
-importScripts("/../encoders/browser-id3-writer.js");
+importScripts('/../encoders/Mp3Encoder.min.js');
+importScripts('/../encoders/browser-id3-writer.js');
 
 const NUM_CH = 2; // constant
 let sampleRate = 44100,
@@ -9,7 +9,7 @@ let sampleRate = 44100,
     bufferCount = 0;
 
 function error(message) {
-    self.postMessage({command: "error", message: "mp3: " + message});
+    self.postMessage({command: 'error', message: `Mp3Worker: ${message}`});
 }
 
 function init(data) {
@@ -17,7 +17,7 @@ function init(data) {
         sampleRate = data.config.sampleRate;
         options = data.options;
     } else {
-        error("numChannels must be " + NUM_CH);
+        error(`numChannels must be ${NUM_CH}`);
     }
 }
 
@@ -31,7 +31,7 @@ function record(buffer) {
 }
 
 function postProgress(progress) {
-    self.postMessage({command: "progress", progress: progress});
+    self.postMessage({command: 'progress', progress});
 }
 
 function finish(track) {
@@ -51,7 +51,7 @@ function finish(track) {
     }
 
     // save variables locally so cleanup can be run
-    const blob = encoder.finish("audio/mpeg");
+    const blob = encoder.finish('audio/mpeg');
     cleanup();
 
     const filePromise = new Promise((resolve) => {
@@ -70,11 +70,11 @@ function finish(track) {
     Promise.all([filePromise, imagePromise])
         .then(([file, cover]) => {
             const writer = new ID3Writer(file);
-            writer.setFrame("TPE1", [track.artist])
-                .setFrame("TIT2", track.title);
+            writer.setFrame('TPE1', [track.artist])
+                .setFrame('TIT2', track.title);
 
             if (cover && cover.arrayBuffer && cover.arrayBuffer.byteLength > 0) {
-                writer.setFrame("APIC", {
+                writer.setFrame('APIC', {
                     type: 3,
                     data: cover.arrayBuffer,
                     description: '',
@@ -83,14 +83,14 @@ function finish(track) {
             }
 
             if (track.album) {
-                writer.setFrame("TALB", track.album);
+                writer.setFrame('TALB', track.album);
             }
 
             writer.addTag();
 
             track.url = writer.getURL();
             self.postMessage({
-                command: "complete",
+                command: 'complete',
                 track
             });
         });
@@ -104,19 +104,19 @@ function cleanup() {
 self.onmessage = function (event) {
     let data = event.data;
     switch (data.command) {
-        case "init":
+        case 'init':
             init(data);
             break;
-        case "start":
+        case 'start':
             start();
             break;
-        case "record":
+        case 'record':
             record(data.buffer);
             break;
-        case "finish":
+        case 'finish':
             finish(data.track);
             break;
-        case "cancel":
+        case 'cancel':
             cleanup();
     }
 };

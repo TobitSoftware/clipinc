@@ -20,7 +20,7 @@ function handleTabRemove(id) {
 }
 
 function handleWindowRemove() {
-    chrome.storage.local.get(["tabId"], ({tabId}) => {
+    chrome.storage.local.get(['tabId'], ({tabId}) => {
         chrome.tabs.get(tabId, (tab) => {
             if (tab !== 0 && (chrome.runtime.lastError || !tab)) {
                 resetStorage();
@@ -35,10 +35,10 @@ function resetStorage() {
 
 function handleIconChange() {
     chrome.tabs.getSelected((tab) => {
-        if (chrome.runtime.lastError || !tab || tab.url.indexOf("https://open.spotify.com") === -1) {
+        if (chrome.runtime.lastError || !tab || tab.url.indexOf('https://open.spotify.com') === -1) {
             setDisabledIcon();
         } else {
-            chrome.storage.local.get(["tabId", "isRecording"], ({tabId, isRecording}) => {
+            chrome.storage.local.get(['tabId', 'isRecording'], ({tabId, isRecording}) => {
                 if (!tab.tabId || tab.tabId === id) {
                     if (isRecording) {
                         setRecordingIcon();
@@ -62,12 +62,12 @@ function handleIconClick() {
                         tabs: [index]
                     });
                 });
-            } else if (chrome.runtime.lastError || tab.url.indexOf("https://open.spotify.com") === -1) {
+            } else if (chrome.runtime.lastError || tab.url.indexOf('https://open.spotify.com') === -1) {
                 chrome.tabs.create({
                     url: 'https://open.spotify.com'
                 });
             } else if (!isRecording) {
-                console.log("startCapture");
+                console.log('startCapture');
                 startCapture();
             }
         });
@@ -76,13 +76,13 @@ function handleIconClick() {
 
 function startCapture() {
     chrome.tabs.getSelected((tab) => {
-        chrome.tabs.sendMessage(tab.id, {command: "prepareRecording"}, {}, (response) => {
+        chrome.tabs.sendMessage(tab.id, {command: 'prepareRecording'}, {}, (response) => {
             if (response.error) {
-                chrome.notifications.create("clipincError", {
-                    type: "basic",
-                    title: chrome.i18n.getMessage("name"),
-                    message: chrome.i18n.getMessage("errorChangeDevice"),
-                    iconUrl: "images/clipinc-128.png"
+                chrome.notifications.create('clipincError', {
+                    type: 'basic',
+                    title: chrome.i18n.getMessage('name'),
+                    message: chrome.i18n.getMessage('errorChangeDevice'),
+                    iconUrl: 'images/clipinc-128.png'
                 }, console.log.bind(console));
 
                 console.error(response.error);
@@ -109,29 +109,29 @@ function startCapture() {
 
                 const mediaListener = ({command, data}) => {
                     switch (command) {
-                        case "setVolume":
-                            console.log("set volume to", data.volume);
+                        case 'setVolume':
+                            console.log('set volume to', data.volume);
                             audio.volume = data.volume;
                             break;
-                        case "play":
-                            console.log("start recording");
+                        case 'play':
+                            console.log('start recording');
                             mediaRecorder.startRecording();
                             break;
-                        case "ended":
-                            console.log("finish recording");
+                        case 'ended':
+                            console.log('finish recording');
 
                             // used to skip ads
                             if (data.track.duration <= 30) {
-                                console.log("track is shorter or equal than 30sec, discarding");
+                                console.log('track is shorter or equal than 30sec, discarding');
                                 mediaRecorder.cancelRecording();
                                 break;
                             }
 
                             mediaRecorder.finishRecording(data.track);
                             break;
-                        case "pause":
-                        case "abort":
-                            console.log("cancel current track");
+                        case 'pause':
+                        case 'abort':
+                            console.log('cancel current track');
                             mediaRecorder.cancelRecording();
                             break;
                     }
@@ -142,7 +142,7 @@ function startCapture() {
                         return;
                     }
 
-                    console.log("clean up");
+                    console.log('clean up');
 
                     chrome.runtime.onMessage.removeListener(mediaListener);
                     chrome.browserAction.onClicked.removeListener(handleStopIconClick);
@@ -155,13 +155,13 @@ function startCapture() {
                     stream.getAudioTracks()[0].stop();
 
                     setDefautIcon();
-                    chrome.storage.local.set({isRecording: false, tabId: 0});
-                    chrome.tabs.sendMessage(tab.id, {command: "stopRecording", data: {volume: audio.volume}});
+                    resetStorage();
+                    chrome.tabs.sendMessage(tab.id, {command: 'stopRecording', data: {volume: audio.volume}});
                 });
 
                 chrome.runtime.onMessage.addListener(mediaListener);
                 chrome.browserAction.onClicked.addListener(handleStopIconClick);
-                chrome.tabs.sendMessage(tab.id, {command: "startRecording"});
+                chrome.tabs.sendMessage(tab.id, {command: 'startRecording'});
 
                 chrome.storage.local.set({isRecording: true, tabId: tab.id});
                 setRecordingIcon();
@@ -171,7 +171,7 @@ function startCapture() {
 }
 
 function cleanDownloadShelf(delta) {
-    if (!delta || !delta.state || delta.state.current !== "complete") {
+    if (!delta || !delta.state || delta.state.current !== 'complete') {
         return;
     }
 
@@ -189,7 +189,7 @@ function download(recorder, track) {
     chrome.downloads.onChanged.addListener(cleanDownloadShelf);
 
     const regex = /[\\/:*?"<>|.]/g;
-    let dir = "clipinc";
+    let dir = 'clipinc';
 
 
     if (track.playlist || track.album) {
@@ -197,51 +197,51 @@ function download(recorder, track) {
     }
 
     let filename = `${dir}/${track.artist.replace(regex, ' ').trim()} - ${track.title.replace(regex, ' ').trim()}.mp3`;
-    console.log("download mp3: ", filename);
-    chrome.downloads.download({url: track.url, filename });
+    console.log('download mp3: ', filename);
+    chrome.downloads.download({url: track.url, filename});
 }
 
 function setDefautIcon() {
     chrome.browserAction.setIcon({
         path: {
-            "16": "images/clipinc-16.png",
-            "32": "images/clipinc-32.png",
-            "48": "images/clipinc-48.png",
-            "128": "images/clipinc-128.png"
+            '16': 'images/clipinc-16.png',
+            '32': 'images/clipinc-32.png',
+            '48': 'images/clipinc-48.png',
+            '128': 'images/clipinc-128.png'
         }
     });
 
     chrome.browserAction.setTitle({
-        title: chrome.i18n.getMessage("nameStart")
+        title: chrome.i18n.getMessage('nameStart')
     });
 }
 
 function setRecordingIcon() {
     chrome.browserAction.setIcon({
         path: {
-            "16": "images/clipinc-16-record.png",
-            "32": "images/clipinc-32-record.png",
-            "48": "images/clipinc-48-record.png",
-            "128": "images/clipinc-128-record.png"
+            '16': 'images/clipinc-16-record.png',
+            '32': 'images/clipinc-32-record.png',
+            '48': 'images/clipinc-48-record.png',
+            '128': 'images/clipinc-128-record.png'
         }
     });
 
     chrome.browserAction.setTitle({
-        title: chrome.i18n.getMessage("nameRecording")
+        title: chrome.i18n.getMessage('nameRecording')
     });
 }
 
 function setDisabledIcon() {
     chrome.browserAction.setIcon({
         path: {
-            "16": "images/clipinc-16-disable.png",
-            "32": "images/clipinc-32-disable.png",
-            "48": "images/clipinc-48-disable.png",
-            "128": "images/clipinc-128-disable.png"
+            '16': 'images/clipinc-16-disable.png',
+            '32': 'images/clipinc-32-disable.png',
+            '48': 'images/clipinc-48-disable.png',
+            '128': 'images/clipinc-128-disable.png'
         }
     });
 
     chrome.browserAction.setTitle({
-        title: chrome.i18n.getMessage("name")
+        title: chrome.i18n.getMessage('name')
     });
 }

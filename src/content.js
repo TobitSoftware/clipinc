@@ -1,43 +1,43 @@
 function handlePlay() {
-    chrome.runtime.sendMessage({command: "play", data: {}});
+    chrome.runtime.sendMessage({command: 'play', data: {}});
 }
 
 function handleEnded() {
-    chrome.runtime.sendMessage({command: "ended", data: {track: getTrackInfo()}});
+    chrome.runtime.sendMessage({command: 'ended', data: {track: getTrackInfo()}});
 }
 
 function handleAbort() {
-    chrome.runtime.sendMessage({command: "abort", data: {}});
+    chrome.runtime.sendMessage({command: 'abort', data: {}});
 }
 
 function handlePause() {
-    chrome.runtime.sendMessage({command: "pause", data: {}});
+    chrome.runtime.sendMessage({command: 'pause', data: {}});
 }
 
 function handleVolumeInput(event) {
-    chrome.runtime.sendMessage({command: "setVolume", data: {volume: parseFloat(event.target.value)}});
+    chrome.runtime.sendMessage({command: 'setVolume', data: {volume: parseFloat(event.target.value)}});
 }
 
 function getTrackInfo() {
-    const nowPlayingBar = document.querySelector("div.now-playing-bar");
+    const nowPlayingBar = document.querySelector('div.now-playing-bar');
 
-    const artist = nowPlayingBar.querySelector(".track-info__artists a").innerText;
-    const title = nowPlayingBar.querySelector(".track-info__name a").innerText;
-    const duration = nowPlayingBar.querySelector(".progress-bar + .playback-bar__progress-time").innerText;
-    const cover = nowPlayingBar.querySelector(".cover-art-image").style.backgroundImage;
-    const isPremium = document.querySelector(".main-view-container--has-ads") === null;
-    const isGroup = document.querySelector(".icon.playing-icon.spoticon-volume-16") !== null;
-    const type = document.querySelector(".icon.playing-icon.spoticon-volume-16 + .type");
-    const isAlbum = type && type.innerText.toLocaleLowerCase() === "album";
-    const isPlaylist = type && type.innerText.toLocaleLowerCase() === "playlist";
-    const lastPlayed = JSON.parse(localStorage.getItem("playbackHistory"))[0].name;
+    const artist = nowPlayingBar.querySelector('.track-info__artists a').innerText;
+    const title = nowPlayingBar.querySelector('.track-info__name a').innerText;
+    const duration = nowPlayingBar.querySelector('.progress-bar + .playback-bar__progress-time').innerText;
+    const cover = nowPlayingBar.querySelector('.cover-art-image').style.backgroundImage;
+    const isPremium = document.querySelector('.main-view-container--has-ads') === null;
+    const isGroup = document.querySelector('.icon.playing-icon.spoticon-volume-16') !== null;
+    const type = document.querySelector('.icon.playing-icon.spoticon-volume-16 + .type');
+    const isAlbum = type && type.innerText.toLocaleLowerCase() === 'album';
+    const isPlaylist = type && type.innerText.toLocaleLowerCase() === 'playlist';
+    const lastPlayed = JSON.parse(localStorage.getItem('playbackHistory'))[0].name;
 
 
     return {
         artist,
         title,
         duration: durationToSeconds(duration),
-        cover: cover.substring("url(\"".length, cover.length - "\")".length),
+        cover: cover.substring('url("'.length, cover.length - '")'.length),
         kbps: isPremium ? 256 : 128,
         playlist: isGroup && isPlaylist ? lastPlayed : undefined,
         album: isGroup && isAlbum ? lastPlayed : undefined
@@ -45,7 +45,7 @@ function getTrackInfo() {
 }
 
 function getIsLocalDevice() {
-    return document.querySelector(".connect-bar") === null;
+    return document.querySelector('.connect-bar') === null;
 }
 
 function getVolume() {
@@ -61,7 +61,7 @@ function setVolume(volume) {
 }
 
 function hijackVolumeControl() {
-    if (document.querySelector(".volume-bar--hijacked") !== null) {
+    if (document.querySelector('.volume-bar--hijacked') !== null) {
         return;
     }
 
@@ -106,14 +106,14 @@ function hijackPlayer() {
 }
 
 function durationToSeconds(duration) {
-    const times = duration.split(":");
+    const times = duration.split(':');
     return parseInt(times[0], 10) * 60 + parseInt(times[1], 10);
 }
 
 chrome.runtime.onMessage.addListener(({command, data}, sender, sendResponse) => {
     switch (command) {
         case 'prepareRecording':
-            const error = !getIsLocalDevice() ? "cannot record from remote device" : undefined;
+            const error = !getIsLocalDevice() ? 'cannot record from remote device' : undefined;
             const oldVolume = getVolume();
 
             if (!error) {
@@ -121,10 +121,10 @@ chrome.runtime.onMessage.addListener(({command, data}, sender, sendResponse) => 
                 setVolume(1);
             }
 
-            sendResponse({volume: oldVolume, error });
+            sendResponse({volume: oldVolume, error});
             break;
         case 'startRecording':
-            const play = document.querySelector(".control-button.spoticon-play-16");
+            const play = document.querySelector('.control-button.spoticon-play-16');
             if (play) {
                 play.click();
             }
@@ -132,7 +132,7 @@ chrome.runtime.onMessage.addListener(({command, data}, sender, sendResponse) => 
         case 'stopRecording':
             releaseVolumeControl();
             setVolume(data.volume);
-            const pause = document.querySelector(".control-button.spoticon-pause-16");
+            const pause = document.querySelector('.control-button.spoticon-pause-16');
             if (pause) {
                 pause.click();
             }
@@ -144,7 +144,7 @@ hijackPlayer();
 
 //event listener to increase volume for first track
 document.addEventListener('initplayer', () => {
-    chrome.storage.local.get("isRecording", ({isRecording}) => {
+    chrome.storage.local.get('isRecording', ({isRecording}) => {
         if (isRecording) {
             setVolume(1);
         }
