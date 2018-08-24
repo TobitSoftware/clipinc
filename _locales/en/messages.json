@@ -9,6 +9,9 @@
     "message": "clipinc®: Start recording"
   },
   "description": {
-    "message": "Hol Dir die Songs von Spotify als lupenreinen MP3-Mitschnitt auf Deine Festplatte"
+    "message": "Get the songs from Spotify as flawless MP3 recordings on your hard drive!"
+  },
+  "errorChangeDevice": {
+    "message": "Change playback to this web browser to start the recording."
   }
 }

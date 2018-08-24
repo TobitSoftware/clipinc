@@ -115,8 +115,12 @@ chrome.runtime.onMessage.addListener(({command, data}, sender, sendResponse) => 
         case 'prepareRecording':
             const error = !getIsLocalDevice() ? "cannot record from remote device" : undefined;
             const oldVolume = getVolume();
-            hijackVolumeControl();
-            setVolume(1);
+
+            if (!error) {
+                hijackVolumeControl();
+                setVolume(1);
+            }
+
             sendResponse({volume: oldVolume, error });
             break;
         case 'startRecording':

@@ -2,7 +2,7 @@
   "name": "__MSG_name__",
   "version": "1.0",
   "description": "__MSG_description__",
-  "permissions": ["tabs", "tabCapture", "activeTab", "declarativeContent", "storage", "downloads", "downloads.shelf"],
+  "permissions": ["tabs", "tabCapture", "activeTab", "declarativeContent", "storage", "downloads", "downloads.shelf", "notifications"],
   "background": {
     "scripts": ["recorder.js", "background.js"]
   },

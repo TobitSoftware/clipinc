@@ -78,6 +78,13 @@ function startCapture() {
     chrome.tabs.getSelected((tab) => {
         chrome.tabs.sendMessage(tab.id, {command: "prepareRecording"}, {}, (response) => {
             if (response.error) {
+                chrome.notifications.create("clipincError", {
+                    type: "basic",
+                    title: chrome.i18n.getMessage("name"),
+                    message: chrome.i18n.getMessage("errorChangeDevice"),
+                    iconUrl: "images/clipinc-128.png"
+                }, console.log.bind(console));
+
                 console.error(response.error);
                 return;
             }
