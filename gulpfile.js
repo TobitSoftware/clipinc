@@ -1,6 +1,6 @@
-var gulp = require('gulp');
-var uglify = require('gulp-uglify');
-var pump = require('pump');
+const gulp = require('gulp');
+const uglify = require('gulp-uglify');
+const pump = require('pump');
 const babel = require('gulp-babel');
 
 gulp.task('default', ['build', 'copy']);

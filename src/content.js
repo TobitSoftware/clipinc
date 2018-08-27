@@ -101,6 +101,17 @@ function hijackPlayer() {
         document.addEventListener('ended', handleEnded);
         document.addEventListener('pause', handlePause);
         document.addEventListener('abort', handleAbort);
+
+        //event listener to increase volume for first track
+        document.addEventListener('initplayer', () => {
+            chrome.storage.local.get('isRecording', ({isRecording}) => {
+                console.log("initplayer, isRecording: ", isRecording);
+
+                if (isRecording) {
+                    setVolume(1);
+                }
+            })
+        });
     };
     (document.head || document.documentElement).appendChild(s);
 }
@@ -141,12 +152,8 @@ chrome.runtime.onMessage.addListener(({command, data}, sender, sendResponse) => 
 });
 
 hijackPlayer();
-
-//event listener to increase volume for first track
-document.addEventListener('initplayer', () => {
-    chrome.storage.local.get('isRecording', ({isRecording}) => {
-        if (isRecording) {
-            setVolume(1);
-        }
-    })
+chrome.storage.local.get('isRecording', ({isRecording}) => {
+    if (isRecording) {
+        hijackVolumeControl();
+    }
 });

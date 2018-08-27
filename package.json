@@ -1,7 +1,7 @@
 {
   "name": "spotify-recorder-extension",
   "version": "1.0.0",
-  "description": "TODO:\r - check out video.playbackRate to speed up playback",
+  "description": "clipinc chrome browser extension",
   "main": "src/manifest.json",
   "scripts": {
     "build": "gulp",

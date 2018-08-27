@@ -1,15 +1,15 @@
 chrome.runtime.onInstalled.addListener(() => {
     resetStorage();
-
-    chrome.runtime.onStartup.addListener(resetStorage);
-    chrome.tabs.onRemoved.addListener(handleTabRemove);
-    chrome.windows.onRemoved.addListener(handleWindowRemove);
-
-    chrome.tabs.onActivated.addListener(handleIconChange);
-    chrome.windows.onFocusChanged.addListener(handleIconChange);
-
-    chrome.browserAction.onClicked.addListener(handleIconClick);
 });
+
+chrome.runtime.onStartup.addListener(resetStorage);
+chrome.tabs.onRemoved.addListener(handleTabRemove);
+chrome.windows.onRemoved.addListener(handleWindowRemove);
+
+chrome.tabs.onActivated.addListener(handleIconChange);
+chrome.windows.onFocusChanged.addListener(handleIconChange);
+
+chrome.browserAction.onClicked.addListener(handleIconClick);
 
 function handleTabRemove(id) {
     chrome.storage.local.get(['tabId'], ({tabId}) => {
