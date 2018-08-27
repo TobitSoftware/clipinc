@@ -198,7 +198,7 @@ function download(recorder, track) {
 
     let filename = `${dir}/${track.artist.replace(regex, ' ').trim()} - ${track.title.replace(regex, ' ').trim()}.mp3`;
     console.log('download mp3: ', filename);
-    chrome.downloads.download({url: track.url, filename});
+    chrome.downloads.download({url: track.url, filename, conflictAction: 'overwrite'});
 }
 
 function setDefautIcon() {
