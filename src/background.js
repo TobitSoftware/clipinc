@@ -148,8 +148,7 @@ function startCapture() {
                     chrome.browserAction.onClicked.removeListener(handleStopIconClick);
 
                     mediaRecorder.cancelRecording();
-                    mediaRecorder.onComplete = () => {
-                    };
+                    mediaRecorder.onComplete = () => {};
 
                     audioCtx.close();
                     stream.getAudioTracks()[0].stop();
@@ -190,7 +189,6 @@ function download(recorder, track) {
 
     const regex = /[\\/:*?"<>|.]/g;
     let dir = 'clipinc';
-
 
     if (track.playlist || track.album) {
         dir += `/${(track.playlist || track.album).replace(regex, ' ').trim()}`;
