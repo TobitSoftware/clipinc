@@ -1,16 +1,23 @@
+// reset storage after installation
 chrome.runtime.onInstalled.addListener(() => {
     resetStorage();
 });
 
+// reset storage when chrome starts
 chrome.runtime.onStartup.addListener(resetStorage);
+
+//handle tab / window removed
 chrome.tabs.onRemoved.addListener(handleTabRemove);
 chrome.windows.onRemoved.addListener(handleWindowRemove);
 
+//handle tab / window focus change
 chrome.tabs.onActivated.addListener(handleIconChange);
 chrome.windows.onFocusChanged.addListener(handleIconChange);
 
+// extension icon click
 chrome.browserAction.onClicked.addListener(handleIconClick);
 
+// delete storage if the tab that was recorded is closed
 function handleTabRemove(id) {
     chrome.storage.local.get(['tabId'], ({tabId}) => {
         if (tabId && id === tabId) {
@@ -19,6 +26,7 @@ function handleTabRemove(id) {
     });
 }
 
+// delete storage if the window that was recording was closed
 function handleWindowRemove() {
     chrome.storage.local.get(['tabId'], ({tabId}) => {
         chrome.tabs.get(tabId, (tab) => {
@@ -29,10 +37,15 @@ function handleWindowRemove() {
     });
 }
 
+// clear storage
 function resetStorage() {
     chrome.storage.local.set({isRecording: false, tabId: 0});
 }
 
+// called when focus of tab / window changes
+// if the website that is opened is not spotify, set the icon to the disabled one
+// otherwise check if the current spotify tab is the tab that is recorded
+// start / stop recording based on state
 function handleIconChange() {
     chrome.tabs.getSelected((tab) => {
         if (chrome.runtime.lastError || !tab || tab.url.indexOf('https://open.spotify.com') === -1) {
@@ -53,6 +66,8 @@ function handleIconChange() {
     });
 }
 
+// handle extension icon click
+// update selected tab, open url or start capture based on current state
 function handleIconClick() {
     chrome.storage.local.get(['isRecording', 'tabId'], ({isRecording, tabId}) => {
         chrome.tabs.getSelected((tab) => {
@@ -74,6 +89,7 @@ function handleIconClick() {
     });
 }
 
+// start tab capturing
 function startCapture() {
     chrome.tabs.getSelected((tab) => {
         chrome.tabs.sendMessage(tab.id, {command: 'prepareRecording'}, {}, (response) => {
@@ -169,6 +185,7 @@ function startCapture() {
     });
 }
 
+// remove files from download shelf to stop spam
 function cleanDownloadShelf(delta) {
     if (!delta || !delta.state || delta.state.current !== 'complete') {
         return;
@@ -184,6 +201,7 @@ function cleanDownloadShelf(delta) {
     });
 }
 
+// download file
 function download(recorder, track) {
     chrome.downloads.onChanged.addListener(cleanDownloadShelf);
 
@@ -199,6 +217,7 @@ function download(recorder, track) {
     chrome.downloads.download({url: track.url, filename, conflictAction: 'overwrite'});
 }
 
+//set icon to default
 function setDefautIcon() {
     chrome.browserAction.setIcon({
         path: {
@@ -214,6 +233,7 @@ function setDefautIcon() {
     });
 }
 
+// set icon to recording
 function setRecordingIcon() {
     chrome.browserAction.setIcon({
         path: {
@@ -229,6 +249,7 @@ function setRecordingIcon() {
     });
 }
 
+//set icon to disabled
 function setDisabledIcon() {
     chrome.browserAction.setIcon({
         path: {

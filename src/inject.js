@@ -1,3 +1,4 @@
+// overwrite createElement function to attach event listener
 (function () {
     const createElement = document.createElement;
 

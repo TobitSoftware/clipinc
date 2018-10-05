@@ -1,23 +1,29 @@
+// handle player play event
 function handlePlay() {
     chrome.runtime.sendMessage({command: 'play', data: {}});
 }
 
+// handle player ended event
 function handleEnded() {
     chrome.runtime.sendMessage({command: 'ended', data: {track: getTrackInfo()}});
 }
 
+// handle player abort event
 function handleAbort() {
     chrome.runtime.sendMessage({command: 'abort', data: {}});
 }
 
+// handle player pause event
 function handlePause() {
     chrome.runtime.sendMessage({command: 'pause', data: {}});
 }
 
+// handle player volume change event
 function handleVolumeInput(event) {
     chrome.runtime.sendMessage({command: 'setVolume', data: {volume: parseFloat(event.target.value)}});
 }
 
+// get track info from dom
 function getTrackInfo() {
     const nowPlayingBar = document.querySelector('div.now-playing-bar');
 
@@ -44,15 +50,18 @@ function getTrackInfo() {
     };
 }
 
+// checks if playback is on the local device
 function getIsLocalDevice() {
     return document.querySelector('.connect-bar') === null;
 }
 
+// get volume from dom
 function getVolume() {
     const v = JSON.parse(localStorage.getItem('playback')).volume;
     return Math.max(0, Math.min(1, v * v * v));
 }
 
+// set volume
 function setVolume(volume) {
     const e = new CustomEvent('setvolume', {
         detail: {volume}
@@ -60,6 +69,7 @@ function setVolume(volume) {
     document.dispatchEvent(e)
 }
 
+// overwrite spotify volume control, to prevent gain change while recording
 function hijackVolumeControl() {
     if (document.querySelector('.volume-bar--hijacked') !== null) {
         return;
@@ -82,6 +92,7 @@ function hijackVolumeControl() {
     document.querySelector('.volume-bar').style.display = 'none';
 }
 
+// remove custom volume control and add old one
 function releaseVolumeControl() {
     const volumeBar = document.querySelector('.volume-bar--hijacked');
 
@@ -92,6 +103,7 @@ function releaseVolumeControl() {
     document.querySelector('.volume-bar').style.display = '';
 }
 
+//load inject.js to start the player hijack
 function hijackPlayer() {
     const s = document.createElement('script');
     s.src = chrome.extension.getURL('inject.js');
@@ -116,6 +128,7 @@ function hijackPlayer() {
     (document.head || document.documentElement).appendChild(s);
 }
 
+//parses duration to seconds
 function durationToSeconds(duration) {
     const times = duration.split(':');
     return parseInt(times[0], 10) * 60 + parseInt(times[1], 10);
@@ -151,7 +164,10 @@ chrome.runtime.onMessage.addListener(({command, data}, sender, sendResponse) => 
     }
 });
 
+// hijack player as soon as script is ready
 hijackPlayer();
+
+// if player is already recording, hijack volume control immediately
 chrome.storage.local.get('isRecording', ({isRecording}) => {
     if (isRecording) {
         hijackVolumeControl();
