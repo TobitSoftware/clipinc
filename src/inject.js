@@ -19,7 +19,7 @@
     document.createElement = function (tag) {
         const element = createElement.call(document, tag);
 
-        if (tag === 'video') {
+        if (tag === 'audio') {
             window._svp = element;
 
             element.addEventListener('play', dispatchToDocument);
