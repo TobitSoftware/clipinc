@@ -32,12 +32,13 @@ function getTrackInfo() {
     const duration = nowPlayingBar.querySelector('.progress-bar + .playback-bar__progress-time').innerText;
     const cover = nowPlayingBar.querySelector('.cover-art-image').style.backgroundImage;
     const isPremium = document.querySelector('.main-view-container--has-ads') === null;
-    const isGroup = document.querySelector('.icon.playing-icon.spoticon-volume-16') !== null;
-    const type = document.querySelector('.icon.playing-icon.spoticon-volume-16 + .type');
+
+    const recentlyPlayed = document.querySelector('.recently-played');
+    const isGroup = recentlyPlayed.querySelector('.icon.RecentlyPlayedWidget__playing-icon.spoticon-volume-16') !== null;
+    const type = isGroup && recentlyPlayed.querySelector('.RecentlyPlayedWidget__type');
     const isAlbum = type && type.innerText.toLocaleLowerCase() === 'album';
     const isPlaylist = type && type.innerText.toLocaleLowerCase() === 'playlist';
     const lastPlayed = JSON.parse(localStorage.getItem('playbackHistory'))[0].name;
-
 
     return {
         artist,
