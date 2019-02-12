@@ -136,9 +136,10 @@ function durationToSeconds(duration) {
 }
 
 chrome.runtime.onMessage.addListener(({command, data}, sender, sendResponse) => {
+    let error;
     switch (command) {
         case 'prepareRecording':
-            const error = !getIsLocalDevice() ? 'cannot record from remote device' : undefined;
+            error = !getIsLocalDevice() ? 'cannot record from remote device' : undefined;
             const oldVolume = getVolume();
 
             if (!error) {
@@ -148,6 +149,24 @@ chrome.runtime.onMessage.addListener(({command, data}, sender, sendResponse) => 
 
             sendResponse({volume: oldVolume, error});
             break;
+        case 'getAccessToken':
+            const cookies = document.cookie.split('; ');
+            const name = 'wp_access_token';
+            let accessToken;
+
+            for (let i = 0, l = cookies.length; i < l; i++) {
+                let c = cookies[i].split('=');
+                if (c[0] === name) {
+                    accessToken = c[1];
+                    break;
+                }
+            }
+
+            if (!accessToken) {
+                error = 'no access token found';
+            }
+
+            sendResponse({accessToken, error});
         case 'startRecording':
             const play = document.querySelector('.control-button.spoticon-play-16');
             if (play) {

@@ -1,7 +1,5 @@
 // reset storage after installation
-chrome.runtime.onInstalled.addListener(() => {
-    resetStorage();
-});
+chrome.runtime.onInstalled.addListener(resetStorage);
 
 // reset storage when chrome starts
 chrome.runtime.onStartup.addListener(resetStorage);
@@ -11,8 +9,8 @@ chrome.tabs.onRemoved.addListener(handleTabRemove);
 chrome.windows.onRemoved.addListener(handleWindowRemove);
 
 //handle tab / window focus change
-chrome.tabs.onActivated.addListener(handleIconChange);
-chrome.windows.onFocusChanged.addListener(handleIconChange);
+chrome.tabs.onActivated.addListener(handleFocusChange);
+chrome.windows.onFocusChanged.addListener(handleFocusChange);
 
 // extension icon click
 chrome.browserAction.onClicked.addListener(handleIconClick);
@@ -37,16 +35,11 @@ function handleWindowRemove() {
     });
 }
 
-// clear storage
-function resetStorage() {
-    chrome.storage.local.set({isRecording: false, tabId: 0});
-}
-
 // called when focus of tab / window changes
 // if the website that is opened is not spotify, set the icon to the disabled one
 // otherwise check if the current spotify tab is the tab that is recorded
 // start / stop recording based on state
-function handleIconChange() {
+function handleFocusChange() {
     chrome.tabs.getSelected((tab) => {
         if (chrome.runtime.lastError || !tab || tab.url.indexOf('https://open.spotify.com') === -1) {
             setDisabledIcon();
@@ -56,7 +49,7 @@ function handleIconChange() {
                     if (isRecording) {
                         setRecordingIcon();
                     } else {
-                        setDefautIcon();
+                        setDefaultIcon();
                     }
                 } else {
                     setDisabledIcon();
@@ -169,7 +162,7 @@ function startCapture() {
                     audioCtx.close();
                     stream.getAudioTracks()[0].stop();
 
-                    setDefautIcon();
+                    setDefaultIcon();
                     resetStorage();
                     chrome.tabs.sendMessage(tab.id, {command: 'stopRecording', data: {volume: audio.volume}});
                 });
@@ -185,20 +178,9 @@ function startCapture() {
     });
 }
 
-// remove files from download shelf to stop spam
-function cleanDownloadShelf(delta) {
-    if (!delta || !delta.state || delta.state.current !== 'complete') {
-        return;
-    }
-
-    chrome.downloads.search({id: delta.id}, (downloads) => {
-        if (downloads[0].filename.indexOf('clipinc') === -1) {
-            return;
-        }
-
-        chrome.downloads.erase({id: delta.id});
-        chrome.downloads.onChanged.removeListener(cleanDownloadShelf);
-    });
+// clear storage
+function resetStorage() {
+    chrome.storage.local.set({isRecording: false, tabId: 0, track: null});
 }
 
 // download file
@@ -217,8 +199,24 @@ function download(recorder, track) {
     chrome.downloads.download({url: track.url, filename, conflictAction: 'overwrite'});
 }
 
+// remove files from download shelf to stop spam
+function cleanDownloadShelf(delta) {
+    if (!delta || !delta.state || delta.state.current !== 'complete') {
+        return;
+    }
+
+    chrome.downloads.search({id: delta.id}, (downloads) => {
+        if (downloads[0].filename.indexOf('clipinc') === -1) {
+            return;
+        }
+
+        chrome.downloads.erase({id: delta.id});
+        chrome.downloads.onChanged.removeListener(cleanDownloadShelf);
+    });
+}
+
 //set icon to default
-function setDefautIcon() {
+function setDefaultIcon() {
     chrome.browserAction.setIcon({
         path: {
             '16': 'images/clipinc-16.png',
@@ -249,7 +247,7 @@ function setRecordingIcon() {
     });
 }
 
-//set icon to disabled
+// set icon to disabled
 function setDisabledIcon() {
     chrome.browserAction.setIcon({
         path: {
@@ -264,3 +262,28 @@ function setDisabledIcon() {
         title: chrome.i18n.getMessage('name')
     });
 }
+
+// retrieves current track info from spotify with the access token from the user
+const getCurrentTrackInfo = (tab) => new Promise((resolve, reject) => {
+    chrome.tabs.sendMessage(tab.id, {command: 'getAccessToken'}, {}, (response) => {
+        fetch('https://api.spotify.com/v1/me/player', {
+            headers: {
+                'Authorization': `Bearer ${response.accessToken}`
+            }
+        }).then((resp) => resp.json())
+            .then((t) => {
+                /*const track = {
+                    artist,
+                    title: t.item.name,
+                    duration: durationToSeconds(t.item.duration_ms),
+                    cover: t.item.album.images[2].url,
+                    kbps: isPremium ? 256 : 128,
+                    playlist: isGroup && isPlaylist ? lastPlayed : undefined,
+                    album: isGroup && isAlbum ? lastPlayed : undefined
+                };*/
+
+                resolve(t);
+            })
+            .catch(reject);
+    });
+});
