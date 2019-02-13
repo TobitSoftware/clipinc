@@ -8,6 +8,7 @@
         if (event.target.ended && event.type !== 'ended') {
             return;
         }
+
         const e = new CustomEvent(event.type, {
             detail: {
                 volume: event.target.volume

@@ -1,54 +1,104 @@
 // handle player play event
-function handlePlay() {
+function handlePlayerPlay() {
     chrome.runtime.sendMessage({command: 'play', data: {}});
 }
 
 // handle player ended event
-function handleEnded() {
-    chrome.runtime.sendMessage({command: 'ended', data: {track: getTrackInfo()}});
+function handlePlayerEnded() {
+    getTrackInfo().then((track) => {
+        chrome.runtime.sendMessage({command: 'ended', data: { track }});
+    });
 }
 
 // handle player abort event
-function handleAbort() {
+function handlePlayerAbort() {
     chrome.runtime.sendMessage({command: 'abort', data: {}});
 }
 
 // handle player pause event
-function handlePause() {
+function handlePlayerPause() {
     chrome.runtime.sendMessage({command: 'pause', data: {}});
 }
 
 // handle player volume change event
-function handleVolumeInput(event) {
+function handlePlayerVolumeInput(event) {
     chrome.runtime.sendMessage({command: 'setVolume', data: {volume: parseFloat(event.target.value)}});
 }
 
 // get track info from dom
-function getTrackInfo() {
-    const nowPlayingBar = document.querySelector('div.now-playing-bar');
-
-    const artist = nowPlayingBar.querySelector('.track-info__artists a').innerText;
-    const title = nowPlayingBar.querySelector('.track-info__name a').innerText;
-    const duration = nowPlayingBar.querySelector('.progress-bar + .playback-bar__progress-time').innerText;
-    const cover = nowPlayingBar.querySelector('.cover-art-image').style.backgroundImage;
-    const isPremium = document.querySelector('.main-view-container--has-ads') === null;
-
+const getTrackInfo = () => new Promise((resolve) => {
     const recentlyPlayed = document.querySelector('.recently-played');
     const isGroup = recentlyPlayed.querySelector('.icon.RecentlyPlayedWidget__playing-icon.spoticon-volume-16') !== null;
-    const type = isGroup && recentlyPlayed.querySelector('.RecentlyPlayedWidget__type');
-    const isAlbum = type && type.innerText.toLocaleLowerCase() === 'album';
-    const isPlaylist = type && type.innerText.toLocaleLowerCase() === 'playlist';
     const lastPlayed = JSON.parse(localStorage.getItem('playbackHistory'))[0].name;
+    const isPremium = document.querySelector('.AdsContainer') === null;
 
-    return {
-        artist,
-        title,
-        duration: durationToSeconds(duration),
-        cover: cover.substring('url("'.length, cover.length - '")'.length),
-        kbps: isPremium ? 256 : 128,
-        playlist: isGroup && isPlaylist ? lastPlayed : undefined,
-        album: isGroup && isAlbum ? lastPlayed : undefined
-    };
+    fetch('https://api.spotify.com/v1/me/player', {
+        headers: {
+            'Authorization': `Bearer ${getAccessToken()}`
+        }
+    }).then(res => res.json())
+        .then((t) => {
+            const track = t.item;
+
+            resolve({
+                title: track.name,
+                artist: track.artists.reduce((acc, a) => acc + (acc ? ', ' : '') + a.name, ''),
+                duration: track.duration_ms,
+                cover: track.album.images[2].url,
+                album: track.album.name,
+                discNumber: track.disc_number,
+                trackNumber: track.track_number,
+                albumArtist: track.album.artists.reduce((acc, a) => acc + (acc ? ', ' : '') + a.name, ''),
+                albumReleaseYear: parseInt(track.album.release_date.substring(0, 4), 10),
+                isPremium,
+                kbps: isPremium ? 256 : 128,
+                directory: isGroup ? lastPlayed : undefined,
+            });
+        })
+        .catch((err) => {
+            console.error('clipinc: could not retrieve remote track info', err);
+
+            const nowPlayingBar = document.querySelector('div.now-playing-bar');
+
+            const artist = nowPlayingBar.querySelector('.track-info__artists').innerText;
+            const title = nowPlayingBar.querySelector('.track-info__name').innerText;
+            const duration = nowPlayingBar.querySelector('.progress-bar + .playback-bar__progress-time').innerText;
+            const cover = nowPlayingBar.querySelector('.cover-art-image').style.backgroundImage;
+
+            resolve({
+                artist,
+                title,
+                duration: durationToMs(duration),
+                cover: cover.substring('url("'.length, cover.length - '")'.length),
+                isPremium,
+                kbps: isPremium ? 256 : 128,
+                directory: isGroup ? lastPlayed : undefined,
+            })
+        });
+});
+
+// parses duration to ms
+function durationToMs(duration) {
+    const times = duration.split(':');
+    return (parseInt(times[0], 10) * 60 + parseInt(times[1], 10)) * 1000;
+}
+
+// retrieves a field from the cookies
+function getCookie(key) {
+    const cookies = document.cookie.split('; ');
+
+    for (let i = 0, l = cookies.length; i < l; i++) {
+        let c = cookies[i].split('=');
+        if (c[0] === key) {
+            return c[1];
+        }
+    }
+
+    return '';
+}
+
+function getAccessToken() {
+    return getCookie('wp_access_token');
 }
 
 // checks if playback is on the local device
@@ -56,7 +106,7 @@ function getIsLocalDevice() {
     return document.querySelector('.connect-bar') === null;
 }
 
-// get volume from dom
+// get current volume from dom
 function getVolume() {
     const v = JSON.parse(localStorage.getItem('playback')).volume;
     return Math.max(0, Math.min(1, v * v * v));
@@ -83,7 +133,7 @@ function hijackVolumeControl() {
     input.step = 0.01;
     input.value = JSON.parse(localStorage.getItem('playback')).volume.toFixed(2);
     input.classList.add('slider');
-    input.addEventListener('input', handleVolumeInput);
+    input.addEventListener('input', handlePlayerVolumeInput);
 
     const volumeBar = document.createElement('div');
     volumeBar.appendChild(input);
@@ -93,7 +143,7 @@ function hijackVolumeControl() {
     document.querySelector('.volume-bar').style.display = 'none';
 }
 
-// remove custom volume control and add old one
+// remove custom volume control and show old one again
 function releaseVolumeControl() {
     const volumeBar = document.querySelector('.volume-bar--hijacked');
 
@@ -102,37 +152,6 @@ function releaseVolumeControl() {
     }
 
     document.querySelector('.volume-bar').style.display = '';
-}
-
-//load inject.js to start the player hijack
-function hijackPlayer() {
-    const s = document.createElement('script');
-    s.src = chrome.extension.getURL('inject.js');
-    s.onload = function () {
-        this.remove();
-        document.addEventListener('play', handlePlay);
-        document.addEventListener('ended', handleEnded);
-        document.addEventListener('pause', handlePause);
-        document.addEventListener('abort', handleAbort);
-
-        //event listener to increase volume for first track
-        document.addEventListener('initplayer', () => {
-            chrome.storage.local.get('isRecording', ({isRecording}) => {
-                console.log("initplayer, isRecording: ", isRecording);
-
-                if (isRecording) {
-                    setVolume(1);
-                }
-            })
-        });
-    };
-    (document.head || document.documentElement).appendChild(s);
-}
-
-//parses duration to seconds
-function durationToSeconds(duration) {
-    const times = duration.split(':');
-    return parseInt(times[0], 10) * 60 + parseInt(times[1], 10);
 }
 
 chrome.runtime.onMessage.addListener(({command, data}, sender, sendResponse) => {
@@ -149,24 +168,6 @@ chrome.runtime.onMessage.addListener(({command, data}, sender, sendResponse) => 
 
             sendResponse({volume: oldVolume, error});
             break;
-        case 'getAccessToken':
-            const cookies = document.cookie.split('; ');
-            const name = 'wp_access_token';
-            let accessToken;
-
-            for (let i = 0, l = cookies.length; i < l; i++) {
-                let c = cookies[i].split('=');
-                if (c[0] === name) {
-                    accessToken = c[1];
-                    break;
-                }
-            }
-
-            if (!accessToken) {
-                error = 'no access token found';
-            }
-
-            sendResponse({accessToken, error});
         case 'startRecording':
             const play = document.querySelector('.control-button.spoticon-play-16');
             if (play) {
@@ -184,12 +185,38 @@ chrome.runtime.onMessage.addListener(({command, data}, sender, sendResponse) => 
     }
 });
 
+//load inject.js to start the player hijack
+function hijackPlayer() {
+    const s = document.createElement('script');
+    s.src = chrome.extension.getURL('inject.js');
+    s.onload = function () {
+        this.remove();
+
+        document.addEventListener('play', handlePlayerPlay);
+        document.addEventListener('ended', handlePlayerEnded);
+        document.addEventListener('pause', handlePlayerPause);
+        document.addEventListener('abort', handlePlayerAbort);
+
+        //event listener to increase volume for first track
+        document.addEventListener('initplayer', () => {
+            chrome.storage.local.get('isRecording', ({isRecording}) => {
+                console.log("initplayer, isRecording: ", isRecording);
+
+                if (isRecording) {
+                    setVolume(1);
+                }
+            })
+        });
+
+        // if player is already recording, hijack volume control immediately
+        chrome.storage.local.get('isRecording', ({isRecording}) => {
+            if (isRecording) {
+                hijackVolumeControl();
+            }
+        });
+    };
+    (document.head || document.documentElement).appendChild(s);
+}
+
 // hijack player as soon as script is ready
 hijackPlayer();
-
-// if player is already recording, hijack volume control immediately
-chrome.storage.local.get('isRecording', ({isRecording}) => {
-    if (isRecording) {
-        hijackVolumeControl();
-    }
-});

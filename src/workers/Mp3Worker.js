@@ -71,7 +71,8 @@ function finish(track) {
         .then(([file, cover]) => {
             const writer = new ID3Writer(file);
             writer.setFrame('TPE1', [track.artist])
-                .setFrame('TIT2', track.title);
+                .setFrame('TIT2', track.title)
+                .setFrame('TLEN', track.duration);
 
             if (cover && cover.arrayBuffer && cover.arrayBuffer.byteLength > 0) {
                 writer.setFrame('APIC', {
@@ -84,6 +85,26 @@ function finish(track) {
 
             if (track.album) {
                 writer.setFrame('TALB', track.album);
+            }
+
+            if (track.albumArtist) {
+                writer.setFrame('TPE2', track.albumArtist);
+            }
+
+            if (track.albumReleaseDate) {
+                writer.setFrame('TDAT', track.albumReleaseDate);
+            }
+
+            if (track.albumReleaseYear) {
+                writer.setFrame('TYER', track.albumReleaseYear);
+            }
+
+            if (track.discNumber) {
+                writer.setFrame('TPOS', track.discNumber);
+            }
+
+            if (track.trackNumber) {
+                writer.setFrame('TRCK', track.trackNumber);
             }
 
             writer.addTag();

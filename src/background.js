@@ -129,9 +129,10 @@ function startCapture() {
                         case 'ended':
                             console.log('finish recording');
 
+                            console.log('data', data.track);
                             // used to skip ads
-                            if (data.track.duration <= 30) {
-                                console.log('track is shorter or equal than 30sec, discarding');
+                            if (!data.track.isPremium && data.track.duration <= 30) {
+                                console.log('track is shorter than or equal to 30 seconds, discarding');
                                 mediaRecorder.cancelRecording();
                                 break;
                             }
@@ -188,11 +189,7 @@ function download(recorder, track) {
     chrome.downloads.onChanged.addListener(cleanDownloadShelf);
 
     const regex = /[\\/:*?"<>|.]/g;
-    let dir = 'clipinc';
-
-    if (track.playlist || track.album) {
-        dir += `/${(track.playlist || track.album).replace(regex, ' ').trim()}`;
-    }
+    const dir = `clipinc/${track.directory.replace(regex, ' ').trim()}`;
 
     let filename = `${dir}/${track.artist.replace(regex, ' ').trim()} - ${track.title.replace(regex, ' ').trim()}.mp3`;
     console.log('download mp3: ', filename);
@@ -262,28 +259,3 @@ function setDisabledIcon() {
         title: chrome.i18n.getMessage('name')
     });
 }
-
-// retrieves current track info from spotify with the access token from the user
-const getCurrentTrackInfo = (tab) => new Promise((resolve, reject) => {
-    chrome.tabs.sendMessage(tab.id, {command: 'getAccessToken'}, {}, (response) => {
-        fetch('https://api.spotify.com/v1/me/player', {
-            headers: {
-                'Authorization': `Bearer ${response.accessToken}`
-            }
-        }).then((resp) => resp.json())
-            .then((t) => {
-                /*const track = {
-                    artist,
-                    title: t.item.name,
-                    duration: durationToSeconds(t.item.duration_ms),
-                    cover: t.item.album.images[2].url,
-                    kbps: isPremium ? 256 : 128,
-                    playlist: isGroup && isPlaylist ? lastPlayed : undefined,
-                    album: isGroup && isAlbum ? lastPlayed : undefined
-                };*/
-
-                resolve(t);
-            })
-            .catch(reject);
-    });
-});
