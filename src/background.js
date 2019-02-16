@@ -12,6 +12,15 @@ chrome.windows.onRemoved.addListener(handleWindowRemove);
 chrome.tabs.onActivated.addListener(handleFocusChange);
 chrome.windows.onFocusChanged.addListener(handleFocusChange);
 
+chrome.runtime.onMessage.addListener(({command, data}, sender, sendResponse) => {
+    console.log('background.js runtime msg: ', command, data);
+    switch(command) {
+        case 'startCapture':
+            startCapture();
+            break;
+    }
+});
+
 // delete storage if the tab that was recorded is closed
 function handleTabRemove(id) {
     chrome.storage.local.get(['tabId'], ({tabId}) => {
