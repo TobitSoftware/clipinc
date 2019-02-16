@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>$Title$</title>
     <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
     <style>
         body {
             color: #fff;
@@ -16,20 +17,50 @@
 
         .header {
             background-color: #282828;
-            padding: 32px;
+            padding: 16px 16px 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .track {
+            font-size: 18px;
+            padding: 24px 32px;
+            display: flex;
+            align-items: center;
+        }
+
+        .footer {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            background-color: #282828;
+            padding: 16px;
+        }
+
+        .logo {
+            width: 120px;
+            height: 40px;
         }
 
         .recordLabel {
             font-size: 16px;
         }
 
-        .track {
-            height: 120px;
+        .cover {
+            width: 64px;
+            height: 64px;
+            margin-right: 8px;
+            border: 2px solid #404040;
         }
 
-        .footer {
-            background-color: #282828;
-            padding: 16px;
+        .title {
+            margin-bottom: 2px;
+        }
+
+        .artist {
+            font-size: 80%;
+            opacity: 0.6;
         }
 
         .switch {
@@ -70,6 +101,86 @@
         .switch:disabled + label {
             opacity: 0.5;
         }
+
+        .slider {
+            -webkit-appearance: none;
+            background-color: #404040;
+            height: 6px;
+            width: 80px;
+        }
+
+        .slider:hover {
+            cursor: pointer;
+        }
+
+        .slider:focus {
+            outline: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            transform-origin: 50%;
+            -webkit-appearance: none;
+            border: none;
+            height: 12px;
+            width: 12px;
+            background-color: white;
+            border-radius: 100%;
+            transition: width .1s, height .1s, margin-top .1s;
+            margin-top: -3px;
+        }
+
+        .slider::-webkit-slider-runnable-track {
+            height: 5px;
+            border-width: 9px 0;
+            background: transparent;
+            border-color: transparent;
+            color: transparent;
+        }
+
+        .progress-bar {
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+        }
+
+        .progress-bar-label {
+            font-size: 75%;
+            opacity: 0.6;
+            margin-right: 8px;
+        }
+
+        .progress-bar-track {
+            -webkit-appearance: none;
+            background-color: #404040;
+            height: 4px;
+            width: 100px;
+        }
+
+        .progress-bar-track:hover {
+            cursor: none;
+        }
+
+        .progress-bar-track:focus {
+            outline: none;
+        }
+
+        .progress-bar-track::-webkit-slider-thumb {
+            display: none;
+        }
+
+        .progress-bar-track::-webkit-slider-runnable-track {
+            height: 5px;
+            border-width: 9px 0;
+            background: transparent;
+            border-color: transparent;
+            color: transparent;
+        }
+
+        .volume-label {
+            font-size: 14px;
+            opacity: 0.6;
+            margin-right: 8px;
+        }
     </style>
 </head>
 <body>
@@ -81,19 +192,23 @@
             <span class="recordLabel">Aufnahme starten...</span>
         </div>
         <div style="display: inline-block;">
-            <img src="" alt="">
+            <img class="logo" src="images/logo.png" alt="">
         </div>
     </div>
     <div class="track">
-        <img src="https://i.scdn.co/image/e50389f6c777b64717be52790b4709c53sc4d5590" alt="">
+        <img class="cover" src="https://i.scdn.co/image/e869d7aa3bf2ba4e7d29623151878947958fc18c" alt="">
         <div>
-            <div>Hold me Down</div>
-            <div>Flatline Nizzy</div>
-            <div></div>
+            <div class="title">Hold me Down</div>
+            <div class="artist">Flatline Nizzy</div>
+            <div class="progress-bar">
+                <label class="progress-bar-label" for="progress-bar-track">35%</label>
+                <input id="progress-bar-track" class="progress-bar-track" type="range">
+            </div>
         </div>
     </div>
     <div class="footer">
-        <input type="range">
+        <label class="volume-label" for="volume"><i class="fas fa-volume-up"></i></label>
+        <input id="volume" class="slider" type="range">
     </div>
 </div>
 </body>
