@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>$Title$</title>
+    <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+    <link rel="stylesheet" href="popup.css">
+<body>
+<div>
+    <div class="header">
+        <div style="display: inline-block;">
+            <input id="record" class="switch" type="checkbox">
+            <label for="record"></label>
+            <span class="recordLabel">Aufnahme starten...</span>
+        </div>
+        <div style="display: inline-block;">
+            <img class="logo" src="../images/logo.png" alt="">
+        </div>
+    </div>
+    <div class="track">
+        <img class="cover" src="https://i.scdn.co/image/e869d7aa3bf2ba4e7d29623151878947958fc18c" alt="">
+        <div>
+            <div class="title">Hold me Down</div>
+            <div class="artist">Flatline Nizzy</div>
+            <div class="progress-bar">
+                <label class="progress-bar-label" for="progress-bar-track">35%</label>
+                <input id="progress-bar-track" class="progress-bar-track" type="range">
+            </div>
+        </div>
+    </div>
+    <div class="footer">
+        <label class="volume-label" for="volume"><i class="fas fa-volume-up"></i></label>
+        <input id="volume" class="slider" type="range">
+    </div>
+</div>
+<script src="popup.js"></script>
+</body>
+</html>
