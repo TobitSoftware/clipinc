@@ -12,9 +12,6 @@ chrome.windows.onRemoved.addListener(handleWindowRemove);
 chrome.tabs.onActivated.addListener(handleFocusChange);
 chrome.windows.onFocusChanged.addListener(handleFocusChange);
 
-// extension icon click
-chrome.browserAction.onClicked.addListener(handleIconClick);
-
 // delete storage if the tab that was recorded is closed
 function handleTabRemove(id) {
     chrome.storage.local.get(['tabId'], ({tabId}) => {
@@ -56,29 +53,6 @@ function handleFocusChange() {
                 }
             });
         }
-    });
-}
-
-// handle extension icon click
-// update selected tab, open url or start capture based on current state
-function handleIconClick() {
-    chrome.storage.local.get(['isRecording', 'tabId'], ({isRecording, tabId}) => {
-        chrome.tabs.getSelected((tab) => {
-            if (tab && tabId && tab.id !== tabId) {
-                chrome.tabs.get(tabId, ({index}) => {
-                    chrome.tabs.highlight({
-                        tabs: [index]
-                    });
-                });
-            } else if (chrome.runtime.lastError || tab.url.indexOf('https://open.spotify.com') === -1) {
-                chrome.tabs.create({
-                    url: 'https://open.spotify.com'
-                });
-            } else if (!isRecording) {
-                console.log('startCapture');
-                startCapture();
-            }
-        });
     });
 }
 
