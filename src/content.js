@@ -1,28 +1,25 @@
 // handle player play event
 function handlePlayerPlay() {
-    chrome.runtime.sendMessage({command: 'play', data: {}});
+    getTrackInfo().then((track) => {
+        chrome.runtime.sendMessage({command: 'spotifyPlay', data: {track}});
+    });
 }
 
 // handle player ended event
 function handlePlayerEnded() {
     getTrackInfo().then((track) => {
-        chrome.runtime.sendMessage({command: 'ended', data: { track }});
+        chrome.runtime.sendMessage({command: 'spotifyEnded', data: { track }});
     });
 }
 
 // handle player abort event
 function handlePlayerAbort() {
-    chrome.runtime.sendMessage({command: 'abort', data: {}});
+    chrome.runtime.sendMessage({command: 'spotifyAbort', data: {}});
 }
 
 // handle player pause event
 function handlePlayerPause() {
-    chrome.runtime.sendMessage({command: 'pause', data: {}});
-}
-
-// handle player volume change event
-function handlePlayerVolumeInput(event) {
-    chrome.runtime.sendMessage({command: 'setVolume', data: {volume: parseFloat(event.target.value)}});
+    chrome.runtime.sendMessage({command: 'spotifyPause', data: {}});
 }
 
 // get track info from dom
@@ -88,7 +85,7 @@ function getCookie(key) {
     const cookies = document.cookie.split('; ');
 
     for (let i = 0, l = cookies.length; i < l; i++) {
-        let c = cookies[i].split('=');
+        const c = cookies[i].split('=');
         if (c[0] === key) {
             return c[1];
         }
@@ -120,49 +117,13 @@ function setVolume(volume) {
     document.dispatchEvent(e)
 }
 
-// overwrite spotify volume control, to prevent gain change while recording
-function hijackVolumeControl() {
-    if (document.querySelector('.volume-bar--hijacked') !== null) {
-        return;
-    }
-
-    const input = document.createElement('input');
-    input.type = 'range';
-    input.min = 0;
-    input.max = 1;
-    input.step = 0.01;
-    input.value = JSON.parse(localStorage.getItem('playback')).volume.toFixed(2);
-    input.classList.add('slider');
-    input.addEventListener('input', handlePlayerVolumeInput);
-
-    const volumeBar = document.createElement('div');
-    volumeBar.appendChild(input);
-    volumeBar.classList.add('volume-bar', 'volume-bar--hijacked');
-
-    document.querySelector('.volume-bar').parentNode.appendChild(volumeBar);
-    document.querySelector('.volume-bar').style.display = 'none';
-}
-
-// remove custom volume control and show old one again
-function releaseVolumeControl() {
-    const volumeBar = document.querySelector('.volume-bar--hijacked');
-
-    if (volumeBar !== null) {
-        volumeBar.parentNode.removeChild(volumeBar);
-    }
-
-    document.querySelector('.volume-bar').style.display = '';
-}
-
 chrome.runtime.onMessage.addListener(({command, data}, sender, sendResponse) => {
-    let error;
     switch (command) {
         case 'prepareRecording':
-            error = !getIsLocalDevice() ? 'cannot record from remote device' : undefined;
+            const error = !getIsLocalDevice() ? 'cannot record from remote device' : undefined;
             const oldVolume = getVolume();
-
+            
             if (!error) {
-                hijackVolumeControl();
                 setVolume(1);
             }
 
@@ -175,7 +136,6 @@ chrome.runtime.onMessage.addListener(({command, data}, sender, sendResponse) => 
             }
             break;
         case 'stopRecording':
-            releaseVolumeControl();
             setVolume(data.volume);
             const pause = document.querySelector('.control-button.spoticon-pause-16');
             if (pause) {
@@ -206,13 +166,6 @@ function hijackPlayer() {
                     setVolume(1);
                 }
             })
-        });
-
-        // if player is already recording, hijack volume control immediately
-        chrome.storage.local.get('isRecording', ({isRecording}) => {
-            if (isRecording) {
-                hijackVolumeControl();
-            }
         });
     };
     (document.head || document.documentElement).appendChild(s);

@@ -9,11 +9,7 @@
             return;
         }
 
-        const e = new CustomEvent(event.type, {
-            detail: {
-                volume: event.target.volume
-            }
-        });
+        const e = new CustomEvent(event.type, {});
         document.dispatchEvent(e)
     }
 

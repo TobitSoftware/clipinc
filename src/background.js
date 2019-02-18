@@ -18,8 +18,117 @@ chrome.runtime.onMessage.addListener(({command, data}, sender, sendResponse) => 
         case 'startCapture':
             startCapture();
             break;
+        case 'spotifyPlay':
+            chrome.storage.local.set({'track': data.track});
+            break;
+        case 'spotifyEnded':
+            break;
+        case 'spotifyPause':
+            break;
+        case 'spotifyAbort':
+            break;
     }
 });
+
+// start tab capturing
+function startCapture() {
+    chrome.tabs.query({'active': true}, (tabs) => {
+        const tab = tabs[0];
+
+        chrome.tabs.sendMessage(tab.id, {command: 'prepareRecording'}, {}, (response) => {
+            if (response.error) {
+                chrome.notifications.create('clipincError', {
+                    type: 'basic',
+                    title: chrome.i18n.getMessage('name'),
+                    message: chrome.i18n.getMessage('errorChangeDevice'),
+                    iconUrl: 'images/clipinc-128.png'
+                }, console.log.bind(console));
+
+                console.error(response.error);
+                return;
+            }
+
+            chrome.tabCapture.capture({audio: true}, (stream) => {
+                if (!stream) {
+                    console.error(chrome.runtime.lastError);
+                    return;
+                }
+
+                const audioCtx = new AudioContext();
+                const source = audioCtx.createMediaStreamSource(stream);
+
+                const mediaRecorder = new Recorder(source);
+                mediaRecorder.onComplete = download;
+
+                //restore audio for user
+                const audio = new Audio();
+                audio.srcObject = stream;
+                audio.volume = response.volume;
+                audio.play();
+
+                const stopRecording = () => chrome.tabs.getSelected((currentTab) => {
+                    if (currentTab.id !== tab.id) {
+                        return;
+                    }
+
+                    console.log('clean up');
+
+                    chrome.runtime.onMessage.removeListener(mediaListener);
+
+                    mediaRecorder.cancelRecording();
+                    mediaRecorder.onComplete = () => {};
+
+                    audioCtx.close();
+                    stream.getAudioTracks()[0].stop();
+
+                    setDefaultIcon();
+                    resetStorage();
+                    chrome.tabs.sendMessage(tab.id, {command: 'stopRecording', data: {volume: audio.volume}});
+                });
+
+                const mediaListener = ({command, data}) => {
+                    switch (command) {
+                        case 'setVolume':
+                            console.log('set volume to', data.volume);
+                            audio.volume = data.volume;
+                            break;
+                        case 'spotifyPlay':
+                            console.log('start recording');
+                            mediaRecorder.startRecording();
+                            break;
+                        case 'spotifyEnded':
+                            console.log('finish recording');
+
+                            console.log('data', data.track);
+                            // used to skip ads
+                            if (!data.track.isPremium && data.track.duration <= 30) {
+                                console.log('track is shorter than or equal to 30 seconds, discarding');
+                                mediaRecorder.cancelRecording();
+                                break;
+                            }
+
+                            mediaRecorder.finishRecording(data.track);
+                            break;
+                        case 'spotifyPause':
+                        case 'spotifyAbort':
+                            console.log('cancel current track');
+                            mediaRecorder.cancelRecording();
+                            break;
+                        case 'stopCapture':
+                            stopRecording();
+                            break;
+                    }
+                };
+
+                chrome.runtime.onMessage.addListener(mediaListener);
+                chrome.tabs.sendMessage(tab.id, {command: 'startRecording'});
+
+                chrome.storage.local.set({isRecording: true, tabId: tab.id});
+                setRecordingIcon();
+            });
+        });
+    });
+}
 
 // delete storage if the tab that was recorded is closed
 function handleTabRemove(id) {
@@ -62,103 +171,6 @@ function handleFocusChange() {
                 }
             });
         }
-    });
-}
-
-// start tab capturing
-function startCapture() {
-    chrome.tabs.getSelected((tab) => {
-        chrome.tabs.sendMessage(tab.id, {command: 'prepareRecording'}, {}, (response) => {
-            if (response.error) {
-                chrome.notifications.create('clipincError', {
-                    type: 'basic',
-                    title: chrome.i18n.getMessage('name'),
-                    message: chrome.i18n.getMessage('errorChangeDevice'),
-                    iconUrl: 'images/clipinc-128.png'
-                }, console.log.bind(console));
-
-                console.error(response.error);
-                return;
-            }
-
-            chrome.tabCapture.capture({audio: true}, (stream) => {
-                if (!stream) {
-                    console.error(chrome.runtime.lastError);
-                    return;
-                }
-
-                const audioCtx = new AudioContext();
-                const source = audioCtx.createMediaStreamSource(stream);
-
-                const mediaRecorder = new Recorder(source);
-                mediaRecorder.onComplete = download;
-
-                //restore audio for user
-                const audio = new Audio();
-                audio.srcObject = stream;
-                audio.volume = response.volume;
-                audio.play();
-
-                const mediaListener = ({command, data}) => {
-                    switch (command) {
-                        case 'setVolume':
-                            console.log('set volume to', data.volume);
-                            audio.volume = data.volume;
-                            break;
-                        case 'play':
-                            console.log('start recording');
-                            mediaRecorder.startRecording();
-                            break;
-                        case 'ended':
-                            console.log('finish recording');
-
-                            console.log('data', data.track);
-                            // used to skip ads
-                            if (!data.track.isPremium && data.track.duration <= 30) {
-                                console.log('track is shorter than or equal to 30 seconds, discarding');
-                                mediaRecorder.cancelRecording();
-                                break;
-                            }
-
-                            mediaRecorder.finishRecording(data.track);
-                            break;
-                        case 'pause':
-                        case 'abort':
-                            console.log('cancel current track');
-                            mediaRecorder.cancelRecording();
-                            break;
-                    }
-                };
-
-                const handleStopIconClick = () => chrome.tabs.getSelected((currentTab) => {
-                    if (currentTab.id !== tab.id) {
-                        return;
-                    }
-
-                    console.log('clean up');
-
-                    chrome.runtime.onMessage.removeListener(mediaListener);
-                    chrome.browserAction.onClicked.removeListener(handleStopIconClick);
-
-                    mediaRecorder.cancelRecording();
-                    mediaRecorder.onComplete = () => {};
-
-                    audioCtx.close();
-                    stream.getAudioTracks()[0].stop();
-
-                    setDefaultIcon();
-                    resetStorage();
-                    chrome.tabs.sendMessage(tab.id, {command: 'stopRecording', data: {volume: audio.volume}});
-                });
-
-                chrome.runtime.onMessage.addListener(mediaListener);
-                chrome.browserAction.onClicked.addListener(handleStopIconClick);
-                chrome.tabs.sendMessage(tab.id, {command: 'startRecording'});
-
-                chrome.storage.local.set({isRecording: true, tabId: tab.id});
-                setRecordingIcon();
-            });
-        });
     });
 }
 

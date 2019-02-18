@@ -17,8 +17,7 @@
   },
   "content_scripts": [{
     "matches": ["https://open.spotify.com/*"],
-    "js": ["content.js"],
-    "css": ["slider.css"]
+    "js": ["content.js"]
   }],
   "icons": {
     "16": "images/clipinc-16.png",
