@@ -60,13 +60,10 @@ function startCapture(initialVolume) {
                 //restore audio for user
                 const audio = new Audio();
                 audio.srcObject = stream;
-                console.log(initialVolume);
                 audio.volume = initialVolume;
                 audio.play();
 
                 const stopRecording = () => {
-                    console.log("clean up nigga");
-
                     chrome.runtime.onMessage.removeListener(mediaListener);
 
                     mediaRecorder.cancelRecording();
@@ -124,7 +121,7 @@ function startCapture(initialVolume) {
 function handleTabRemove(id) {
     chrome.storage.local.get(['tabId'], ({tabId}) => {
         if (tabId && id === tabId) {
-            resetStorage();
+            reset();
         }
     });
 }
@@ -134,7 +131,7 @@ function handleWindowRemove() {
     chrome.storage.local.get(['tabId'], ({tabId}) => {
         chrome.tabs.get(tabId, (tab) => {
             if (tab !== 0 && (chrome.runtime.lastError || !tab)) {
-                resetStorage();
+                reset();
             }
         });
     });
@@ -205,18 +202,7 @@ function setRecordingIcon() {
     });
 }
 
-// set icon to disabled
-function setDisabledIcon() {
-    chrome.browserAction.setIcon({
-        path: {
-            '16': 'images/clipinc-16-disable.png',
-            '32': 'images/clipinc-32-disable.png',
-            '48': 'images/clipinc-48-disable.png',
-            '128': 'images/clipinc-128-disable.png'
-        }
-    });
-
-    chrome.browserAction.setTitle({
-        title: chrome.i18n.getMessage('name')
-    });
+function reset() {
+    resetStorage();
+    setDefaultIcon();
 }
