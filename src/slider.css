@@ -1,0 +1,34 @@
+.slider {
+    -webkit-appearance: none;
+    background-color: #404040;
+    border-radius: 2px;
+    height: 4px;
+}
+
+.slider:hover {
+    cursor: pointer;
+}
+
+.slider:focus {
+    outline: none;
+}
+
+.slider::-webkit-slider-thumb {
+    transform-origin: 50%;
+    -webkit-appearance: none;
+    border: none;
+    height: 12px;
+    width: 12px;
+    background-color: white;
+    border-radius: 100%;
+    transition: width .1s, height .1s, margin-top .1s;
+    margin-top: -3px;
+}
+
+.slider::-webkit-slider-runnable-track {
+    height: 5px;
+    border-width: 9px 0;
+    background: transparent;
+    border-color: transparent;
+    color: transparent;
+}

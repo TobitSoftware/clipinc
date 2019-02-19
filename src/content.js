@@ -22,6 +22,11 @@ function handlePlayerPause() {
     chrome.runtime.sendMessage({command: 'spotifyPause', data: {}});
 }
 
+// handle player volume change event
+function handlePlayerVolumeInput(event) {
+    chrome.runtime.sendMessage({command: 'setVolume', data: {volume: parseFloat(event.target.value)}});
+}
+
 // get track info from dom
 const getTrackInfo = () => new Promise((resolve) => {
     const recentlyPlayed = document.querySelector('.recently-played');
@@ -36,8 +41,6 @@ const getTrackInfo = () => new Promise((resolve) => {
     }).then(res => res.json())
         .then((t) => {
             const track = t.item;
-
-            console.log("progress", track.progress_ms);
 
             resolve({
                 title: track.name,
@@ -214,6 +217,7 @@ function hijackPlayer() {
         chrome.storage.local.get('isRecording', ({isRecording}) => {
             if (isRecording) {
                 hijackVolumeControl();
+                play.click();
             }
         });
     };
