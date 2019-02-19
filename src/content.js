@@ -1,7 +1,7 @@
 // handle player play event
 function handlePlayerPlay() {
     getTrackInfo().then((track) => {
-        chrome.runtime.sendMessage({command: 'spotifyPlay', data: {track}});
+        chrome.runtime.sendMessage({command: 'spotifyPlay', data: { track }});
     });
 }
 
@@ -37,6 +37,8 @@ const getTrackInfo = () => new Promise((resolve) => {
         .then((t) => {
             const track = t.item;
 
+            console.log("progress", track.progress_ms);
+
             resolve({
                 title: track.name,
                 artist: track.artists.reduce((acc, a) => acc + (acc ? ', ' : '') + a.name, ''),
@@ -50,6 +52,8 @@ const getTrackInfo = () => new Promise((resolve) => {
                 isPremium,
                 kbps: isPremium ? 256 : 128,
                 directory: isGroup ? lastPlayed : undefined,
+                progress: t.progress_ms,
+                startTime: new Date()
             });
         })
         .catch((err) => {
@@ -70,6 +74,8 @@ const getTrackInfo = () => new Promise((resolve) => {
                 isPremium,
                 kbps: isPremium ? 256 : 128,
                 directory: isGroup ? lastPlayed : undefined,
+                progress: 0,
+                startTime: Date.now()
             })
         });
 });

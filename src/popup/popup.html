@@ -3,35 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <title>$Title$</title>
-    <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300" rel="stylesheet">
     <link rel="stylesheet" href="popup.css">
 <body>
-<div>
-    <div class="header">
+<div class="intro hidden">
+        <img class="logo" src="../images/logo.png" alt="">
+        <div class="text">
+            Öffne Spotify und melde Dich mit Deinem Konto an.
+        </div>
+        <button class="button">Spotify öffnen</button>
+</div>
+<div class="wrapper">
+    <div class="head">
         <div style="display: inline-block;">
             <input id="record" class="switch" type="checkbox">
             <label for="record"></label>
-            <span class="recordLabel">Aufnahme starten...</span>
+            <span class="record-label">Aufnahme starten</span>
         </div>
         <div style="display: inline-block;">
             <img class="logo" src="../images/logo.png" alt="">
         </div>
     </div>
-    <div class="track">
-        <img class="cover" src="https://i.scdn.co/image/e869d7aa3bf2ba4e7d29623151878947958fc18c" alt="">
-        <div>
-            <div class="title">Hold me Down</div>
-            <div class="artist">Flatline Nizzy</div>
-            <div class="progress-bar">
-                <label class="progress-bar-label" for="progress-bar-track">35%</label>
-                <input id="progress-bar-track" class="progress-bar-track" type="range">
+    <div class="body hidden">
+        <div class="track">
+            <img class="cover" src="">
+            <div>
+                <div class="title"></div>
+                <div class="artist"></div>
             </div>
         </div>
-    </div>
-    <div class="footer">
-        <label class="volume-label" for="volume"><i class="fas fa-volume-up"></i></label>
-        <input id="volume" class="slider" type="range">
+        <div class="progress-bar">
+            <div class="progress-bar-track" style="width: 0%;">
+            </div>
+        </div>
     </div>
 </div>
 <script src="popup.js"></script>

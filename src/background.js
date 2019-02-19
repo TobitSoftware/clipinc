@@ -12,11 +12,12 @@ chrome.windows.onRemoved.addListener(handleWindowRemove);
 chrome.tabs.onActivated.addListener(handleFocusChange);
 chrome.windows.onFocusChanged.addListener(handleFocusChange);
 
-chrome.runtime.onMessage.addListener(({command, data}, sender, sendResponse) => {
-    console.log('background.js runtime msg: ', command, data);
+chrome.runtime.onMessage.addListener(({command, data}) => {
+    console.log('background.js: ', command, data);
+
     switch(command) {
         case 'startCapture':
-            startCapture();
+            startCapture(data.volume);
             break;
         case 'spotifyPlay':
             chrome.storage.local.set({'track': data.track});
@@ -31,12 +32,12 @@ chrome.runtime.onMessage.addListener(({command, data}, sender, sendResponse) => 
 });
 
 // start tab capturing
-function startCapture() {
+function startCapture(initialVolume) {
     chrome.tabs.query({'active': true}, (tabs) => {
         const tab = tabs[0];
 
         chrome.tabs.sendMessage(tab.id, {command: 'prepareRecording'}, {}, (response) => {
-            if (response.error) {
+            if (response && response.error) {
                 chrome.notifications.create('clipincError', {
                     type: 'basic',
                     title: chrome.i18n.getMessage('name'),
@@ -63,15 +64,16 @@ function startCapture() {
                 //restore audio for user
                 const audio = new Audio();
                 audio.srcObject = stream;
-                audio.volume = response.volume;
+                console.log(initialVolume);
+                audio.volume = initialVolume;
                 audio.play();
 
-                const stopRecording = () => chrome.tabs.getSelected((currentTab) => {
+                const stopRecording = () => chrome.tabs.query({'active': true}, (tabs) => {
+                    const tab = tabs[0];
+                    
                     if (currentTab.id !== tab.id) {
                         return;
                     }
-
-                    console.log('clean up');
 
                     chrome.runtime.onMessage.removeListener(mediaListener);
 
@@ -87,22 +89,19 @@ function startCapture() {
                 });
 
                 const mediaListener = ({command, data}) => {
+                    console.log('background.js', "mediaListener", command, data);
+
                     switch (command) {
                         case 'setVolume':
-                            console.log('set volume to', data.volume);
                             audio.volume = data.volume;
                             break;
                         case 'spotifyPlay':
-                            console.log('start recording');
                             mediaRecorder.startRecording();
                             break;
                         case 'spotifyEnded':
-                            console.log('finish recording');
-
-                            console.log('data', data.track);
                             // used to skip ads
                             if (!data.track.isPremium && data.track.duration <= 30) {
-                                console.log('track is shorter than or equal to 30 seconds, discarding');
+                                console.log('track is shorter than or equal to 30 seconds, user has no premium, discarding track');
                                 mediaRecorder.cancelRecording();
                                 break;
                             }
@@ -111,7 +110,6 @@ function startCapture() {
                             break;
                         case 'spotifyPause':
                         case 'spotifyAbort':
-                            console.log('cancel current track');
                             mediaRecorder.cancelRecording();
                             break;
                         case 'stopCapture':
@@ -155,7 +153,9 @@ function handleWindowRemove() {
 // otherwise check if the current spotify tab is the tab that is recorded
 // start / stop recording based on state
 function handleFocusChange() {
-    chrome.tabs.getSelected((tab) => {
+    chrome.tabs.query({'active': true}, (tabs) => {
+        const tab = tabs[0];
+
         if (chrome.runtime.lastError || !tab || tab.url.indexOf('https://open.spotify.com') === -1) {
             setDisabledIcon();
         } else {

@@ -1,7 +1,7 @@
 importScripts('/../encoders/Mp3Encoder.min.js');
 importScripts('/../encoders/browser-id3-writer.js');
 
-const NUM_CH = 2; // constant
+const NUM_CH = 2;
 let sampleRate = 44100,
     options = undefined,
     encoder = undefined,
