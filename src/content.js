@@ -174,21 +174,29 @@ chrome.runtime.onMessage.addListener(({command, data}, sender, sendResponse) => 
             sendResponse({volume: oldVolume, error});
             break;
         case 'startRecording':
-            const play = document.querySelector('.control-button.spoticon-play-16');
-            if (play) {
-                play.click();
-            }
+            play();
             break;
         case 'stopRecording':
             releaseVolumeControl();
             setVolume(data.volume);
-            const pause = document.querySelector('.control-button.spoticon-pause-16');
-            if (pause) {
-                pause.click();
-            }
+            pause();
             break;
     }
 });
+
+function play() {
+    const play = document.querySelector('.control-button.spoticon-play-16');
+    if (play) {
+        play.click();
+    }
+}
+
+function pause() {
+    const pause = document.querySelector('.control-button.spoticon-pause-16');
+    if (pause) {
+        pause.click();
+    }
+}
 
 //load inject.js to start the player hijack
 function hijackPlayer() {
@@ -217,7 +225,7 @@ function hijackPlayer() {
         chrome.storage.local.get('isRecording', ({isRecording}) => {
             if (isRecording) {
                 hijackVolumeControl();
-                play.click();
+                play();
             }
         });
     };

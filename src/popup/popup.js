@@ -30,12 +30,11 @@ $switch.addEventListener('input', (event) => {
             chrome.runtime.sendMessage({command: 'startCapture', data: {volume: volume || 1}});
         });
         $recordLabel.innerHTML = 'Aufnahme läuft...';
-        $body.classList.remove('hidden');
     } else {
         chrome.storage.local.set({track: null});
         $recordLabel.innerHTML = 'Aufnahme starten';
-        $body.classList.add('hidden');
         chrome.runtime.sendMessage({command: 'stopCapture', data: {}});
+        $body.classList.add('hidden');
     }
 });
 
@@ -53,6 +52,12 @@ $button.addEventListener('click', () => {
 });
 
 function updateTrack(track) {
+    if (!track) {
+        $body.classList.add('hidden');
+    }
+
+    $body.classList.remove('hidden');
+
     document.querySelector('.title').innerHTML = track.title;
     document.querySelector('.artist').innerHTML = track.artist;
     document.querySelector('.cover').setAttribute('src', track.cover);
