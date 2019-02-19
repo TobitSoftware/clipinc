@@ -8,10 +8,6 @@ chrome.runtime.onStartup.addListener(resetStorage);
 chrome.tabs.onRemoved.addListener(handleTabRemove);
 chrome.windows.onRemoved.addListener(handleWindowRemove);
 
-//handle tab / window focus change
-chrome.tabs.onActivated.addListener(handleFocusChange);
-chrome.windows.onFocusChanged.addListener(handleFocusChange);
-
 chrome.runtime.onMessage.addListener(({command, data}) => {
     console.log('background.js: ', command, data);
 
@@ -68,12 +64,8 @@ function startCapture(initialVolume) {
                 audio.volume = initialVolume;
                 audio.play();
 
-                const stopRecording = () => chrome.tabs.query({'active': true}, (tabs) => {
-                    const tab = tabs[0];
-                    
-                    if (currentTab.id !== tab.id) {
-                        return;
-                    }
+                const stopRecording = () => {
+                    console.log("clean up nigga");
 
                     chrome.runtime.onMessage.removeListener(mediaListener);
 
@@ -86,7 +78,7 @@ function startCapture(initialVolume) {
                     setDefaultIcon();
                     resetStorage();
                     chrome.tabs.sendMessage(tab.id, {command: 'stopRecording', data: {volume: audio.volume}});
-                });
+                };
 
                 const mediaListener = ({command, data}) => {
                     console.log('background.js', "mediaListener", command, data);
@@ -145,32 +137,6 @@ function handleWindowRemove() {
                 resetStorage();
             }
         });
-    });
-}
-
-// called when focus of tab / window changes
-// if the website that is opened is not spotify, set the icon to the disabled one
-// otherwise check if the current spotify tab is the tab that is recorded
-// start / stop recording based on state
-function handleFocusChange() {
-    chrome.tabs.query({'active': true}, (tabs) => {
-        const tab = tabs[0];
-
-        if (chrome.runtime.lastError || !tab || tab.url.indexOf('https://open.spotify.com') === -1) {
-            setDisabledIcon();
-        } else {
-            chrome.storage.local.get(['tabId', 'isRecording'], ({tabId, isRecording}) => {
-                if (!tab.tabId || tab.tabId === id) {
-                    if (isRecording) {
-                        setRecordingIcon();
-                    } else {
-                        setDefaultIcon();
-                    }
-                } else {
-                    setDisabledIcon();
-                }
-            });
-        }
     });
 }
 

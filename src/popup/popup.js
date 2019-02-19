@@ -23,7 +23,8 @@ $cover.addEventListener('error', () => {
 const $body = document.querySelector('.body');
 const $recordLabel = document.querySelector('.record-label')
 const $switch = document.querySelector('#record');
-$switch.addEventListener('change', (event) => {
+$switch.addEventListener('input', (event) => {
+    console.log(event.target.checked, event.target.value);
     if (event.target.checked) {
         chrome.storage.local.get(['volume'], ({volume}) => {
             chrome.runtime.sendMessage({command: 'startCapture', data: {volume: volume || 1}});
@@ -31,12 +32,24 @@ $switch.addEventListener('change', (event) => {
         $recordLabel.innerHTML = 'Aufnahme läuft...';
         $body.classList.remove('hidden');
     } else {
-        chrome.runtime.sendMessage({command: 'stopCapture', data: {}});
         chrome.storage.local.set({track: null});
-        updateTrack(null);
         $recordLabel.innerHTML = 'Aufnahme starten';
         $body.classList.add('hidden');
+        chrome.runtime.sendMessage({command: 'stopCapture', data: {}});
     }
+});
+
+const $button = document.querySelector('.button');
+$button.addEventListener('click', () => {
+    chrome.tabs.query({'active': true}, (tabs) => {
+        if (tabs[0].url.indexOf('https://open.spotify.com') === -1) {
+            chrome.tabs.create({
+                url: 'https://accounts.spotify.com/de/login?continue=https:%2F%2Fopen.spotify.com%2Fbrowse%2Ffeatured'
+            });
+    
+            window.close();
+        }
+    });
 });
 
 function updateTrack(track) {
@@ -51,21 +64,30 @@ function updateProgressBar(track) {
     const progress = track ? `${Math.floor((Date.now() - new Date(track.startTime) + (track.progress || 0)) / track.duration * 100)}%` : '0%';
     document.querySelector('.progress-bar-track').style.width = progress;
 }
-chrome.tabs.query({'active': true}, (tabs) => {
-    chrome.storage.local.get(['isRecording', 'track'], ({isRecording, track}) => {
-        $switch.checked = isRecording;
-        if (isRecording) {
-            $recordLabel.innerHTML = 'Aufnahme läuft...';
-            $body.classList.remove('hidden');
-        } else {
-            $recordLabel.innerHTML = 'Aufnahme starten';
-            $body.classList.add('hidden');
-        }
 
-        if (track) {
-            updateTrack(track);
+chrome.storage.local.get(['isRecording', 'track'], ({isRecording, track}) => {
+    chrome.tabs.query({'active': true}, (tabs) => {
+        if (!isRecording && tabs[0].url.indexOf('https://open.spotify.com') === -1) {
+            document.querySelector('.intro').classList.remove('hidden');
+            document.querySelector('.wrapper').classList.add('hidden');
+        } else {
+            document.querySelector('.intro').classList.add('hidden');
+            document.querySelector('.wrapper').classList.remove('hidden');
         }
     });
+
+    $switch.checked = isRecording;
+    if (isRecording) {
+        $recordLabel.innerHTML = 'Aufnahme läuft...';
+        $body.classList.remove('hidden');
+    } else {
+        $recordLabel.innerHTML = 'Aufnahme starten';
+        $body.classList.add('hidden');
+    }
+
+    if (track) {
+        updateTrack(track);
+    }
 });
 
 setInterval(() => {

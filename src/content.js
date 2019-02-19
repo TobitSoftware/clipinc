@@ -123,6 +123,40 @@ function setVolume(volume) {
     document.dispatchEvent(e)
 }
 
+// overwrite spotify volume control, to prevent gain change while recording
+function hijackVolumeControl() {
+    if (document.querySelector('.volume-bar--hijacked') !== null) {
+        return;
+    }
+
+    const input = document.createElement('input');
+    input.type = 'range';
+    input.min = 0;
+    input.max = 1;
+    input.step = 0.01;
+    input.value = JSON.parse(localStorage.getItem('playback')).volume.toFixed(2);
+    input.classList.add('slider');
+    input.addEventListener('input', handlePlayerVolumeInput);
+
+    const volumeBar = document.createElement('div');
+    volumeBar.appendChild(input);
+    volumeBar.classList.add('volume-bar', 'volume-bar--hijacked');
+
+    document.querySelector('.volume-bar').parentNode.appendChild(volumeBar);
+    document.querySelector('.volume-bar').style.display = 'none';
+}
+
+// remove custom volume control and show old one again
+function releaseVolumeControl() {
+    const volumeBar = document.querySelector('.volume-bar--hijacked');
+
+    if (volumeBar !== null) {
+        volumeBar.parentNode.removeChild(volumeBar);
+    }
+
+    document.querySelector('.volume-bar').style.display = '';
+}
+
 chrome.runtime.onMessage.addListener(({command, data}, sender, sendResponse) => {
     switch (command) {
         case 'prepareRecording':
@@ -130,6 +164,7 @@ chrome.runtime.onMessage.addListener(({command, data}, sender, sendResponse) => 
             const oldVolume = getVolume();
             
             if (!error) {
+                hijackVolumeControl();
                 setVolume(1);
             }
 
@@ -142,6 +177,7 @@ chrome.runtime.onMessage.addListener(({command, data}, sender, sendResponse) => 
             }
             break;
         case 'stopRecording':
+            releaseVolumeControl();
             setVolume(data.volume);
             const pause = document.querySelector('.control-button.spoticon-pause-16');
             if (pause) {
@@ -172,6 +208,13 @@ function hijackPlayer() {
                     setVolume(1);
                 }
             })
+        });
+
+        // if player is already recording, hijack volume control immediately
+        chrome.storage.local.get('isRecording', ({isRecording}) => {
+            if (isRecording) {
+                hijackVolumeControl();
+            }
         });
     };
     (document.head || document.documentElement).appendChild(s);

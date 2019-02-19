@@ -9,10 +9,10 @@
   "browser_action": {
     "default_popup": "popup/popup.html",
     "default_icon": {
-      "16": "images/clipinc-16-disable.png",
-      "32": "images/clipinc-32-disable.png",
-      "48": "images/clipinc-48-disable.png",
-      "128": "images/clipinc-128-disable.png"
+      "16": "images/clipinc-16.png",
+      "32": "images/clipinc-32.png",
+      "48": "images/clipinc-48.png",
+      "128": "images/clipinc-128.png"
     }
   },
   "content_scripts": [{
