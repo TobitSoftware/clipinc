@@ -24,7 +24,8 @@ const $body = document.querySelector('.body');
 const $recordLabel = document.querySelector('.record-label')
 const $switch = document.querySelector('#record');
 $switch.addEventListener('input', (event) => {
-    console.log(event.target.checked, event.target.value);
+    $switch.setAttribute('disabled', 'true');
+
     if (event.target.checked) {
         chrome.storage.local.get(['volume'], ({volume}) => {
             chrome.runtime.sendMessage({command: 'startCapture', data: {volume: volume || 1}});
@@ -36,6 +37,10 @@ $switch.addEventListener('input', (event) => {
         chrome.runtime.sendMessage({command: 'stopCapture', data: {}});
         $body.classList.add('hidden');
     }
+
+    setTimeout(() => {
+        $switch.removeAttribute('disabled');
+    }, 1000);
 });
 
 const $button = document.querySelector('.button');
