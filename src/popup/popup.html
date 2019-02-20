@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="popup.css">
 <body>
 <div class="intro">
-        <img class="logo" src="../images/logo.png" alt="">
+        <img class="logo" src="../images/intro.png" alt="">
         <div class="text">
             Öffne Spotify und melde Dich mit Deinem Konto an.
         </div>
@@ -28,12 +28,22 @@
         <div class="track">
             <img class="cover" src="">
             <div>
-                <div class="title"></div>
-                <div class="artist"></div>
+                <div class="title ellipsis"></div>
+                <div class="artist ellipsis"></div>
             </div>
         </div>
         <div class="progress-bar">
             <div class="progress-bar-track" style="width: 0%;">
+            </div>
+        </div>
+        <div class="footer">
+            <div>
+                <div class="downloaded hidden">
+                        <span id="song-count">0</span> Songs aufgenommen
+                </div>
+            </div>
+            <div class="show-downloads">
+                Ordner anzeigen
             </div>
         </div>
     </div>

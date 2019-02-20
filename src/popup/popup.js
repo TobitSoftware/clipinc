@@ -100,6 +100,10 @@ chrome.storage.local.get(['isRecording', 'track'], ({isRecording, track}) => {
     }
 });
 
+document.querySelector('.show-downloads').addEventListener('click', () => {
+    chrome.downloads.showDefaultFolder();
+});
+
 setInterval(() => {
     chrome.storage.local.get(['isRecording', 'track'], ({isRecording, track}) => {
         if (isRecording) {
