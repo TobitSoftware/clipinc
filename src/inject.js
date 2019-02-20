@@ -32,4 +32,6 @@
 
         return element
     };
+
+    document.body.classList.add('clipinc-ready');
 })();

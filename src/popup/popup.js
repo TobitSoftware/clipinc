@@ -42,24 +42,25 @@ $switch.addEventListener('input', (event) => {
 
     if (event.target.checked) {
         chrome.storage.local.get(['volume'], ({volume}) => {
-            chrome.runtime.sendMessage({command: 'startCapture', data: {volume: volume || 1}});
+            chrome.runtime.sendMessage({command: 'startCapture', data: {volume: volume || 1}}, {}, (resp) => {
+                $switch.checked = resp.success;
+                $switch.removeAttribute('disabled');
+            });
         });
         $recordLabel.innerHTML = 'Aufnahme läuft...';
     } else {
         chrome.storage.local.set({track: null});
         $recordLabel.innerHTML = 'Aufnahme starten';
-        chrome.runtime.sendMessage({command: 'stopCapture', data: {}});
         $body.classList.add('hidden');
+        setTimeout(() => {
+            $switch.removeAttribute('disabled');
+        }, 1000);
     }
-
-    setTimeout(() => {
-        $switch.removeAttribute('disabled');
-    }, 1000);
 });
 
 const $button = document.querySelector('.button');
 $button.addEventListener('click', () => {
-    chrome.tabs.query({'active': true}, (tabs) => {
+    chrome.tabs.query({'active': true, 'currentWindow': true}, (tabs) => {
         if (tabs[0].url.indexOf('https://open.spotify.com') === -1) {
             chrome.tabs.create({
                 url: 'https://accounts.spotify.com/de/login?continue=https:%2F%2Fopen.spotify.com%2Fbrowse%2Ffeatured'
@@ -85,12 +86,13 @@ function updateTrack(track) {
 }
 
 function updateProgressBar(track) {
-    const progress = track ? `${Math.floor((Date.now() - new Date(track.startTime) + (track.progress || 0)) / track.duration * 100)}%` : '0%';
-    document.querySelector('.progress-bar-track').style.width = progress;
+    let progress = track ? Math.floor((Date.now() - new Date(track.startTime) + (track.progress || 0)) / track.duration * 100) : 0;
+    progress = Math.min(Math.max(progress, 0), 100);
+    document.querySelector('.progress-bar-track').style.width = `${progress}%`;
 }
 
 chrome.storage.local.get(['isRecording', 'track', 'songCount'], ({isRecording, track, songCount}) => {
-    chrome.tabs.query({'active': true}, (tabs) => {
+    chrome.tabs.query({'active': true, 'currentWindow': true}, (tabs) => {
         if (!isRecording && tabs[0].url.indexOf('https://open.spotify.com') === -1) {
             document.querySelector('.intro').classList.remove('hidden');
             document.querySelector('.wrapper').classList.add('hidden');

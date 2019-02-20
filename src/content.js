@@ -83,6 +83,15 @@ const getTrackInfo = () => new Promise((resolve) => {
         });
 });
 
+const seek = (position) => {
+    return fetch(`https://api.spotify.com/v1/me/player/seek?position_ms=${position}`, {
+        method: 'PUT',
+        headers: {
+            'Authorization': `Bearer ${getAccessToken()}`
+        }
+    });
+};
+
 // parses duration to ms
 function durationToMs(duration) {
     const times = duration.split(':');
@@ -109,7 +118,7 @@ function getAccessToken() {
 
 // checks if playback is on the local device
 function getIsLocalDevice() {
-    return document.querySelector('.connect-bar') === null;
+    return document.querySelector('.ConnectBar') === null;
 }
 
 // get current volume from dom
@@ -163,6 +172,15 @@ function releaseVolumeControl() {
 chrome.runtime.onMessage.addListener(({command, data}, sender, sendResponse) => {
     switch (command) {
         case 'prepareRecording':
+            const isReady = document.querySelector('body.clipinc-ready') !== null;
+
+            if (!isReady) {
+                console.log("we not ready tho");
+                location.reload();
+                return;
+            }
+
+            console.log(getIsLocalDevice());
             const error = !getIsLocalDevice() ? 'cannot record from remote device' : undefined;
             const oldVolume = getVolume();
             
@@ -174,7 +192,9 @@ chrome.runtime.onMessage.addListener(({command, data}, sender, sendResponse) => 
             sendResponse({volume: oldVolume, error});
             break;
         case 'startRecording':
-            play();
+            seek(0).then(() => {}, () => {}).then(() => {
+                play();
+            });
             break;
         case 'stopRecording':
             releaseVolumeControl();
