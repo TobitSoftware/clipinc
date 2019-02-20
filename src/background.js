@@ -15,15 +15,6 @@ chrome.runtime.onMessage.addListener(({command, data}) => {
         case 'startCapture':
             startCapture(data.volume);
             break;
-        case 'spotifyPlay':
-            chrome.storage.local.set({'track': data.track});
-            break;
-        case 'spotifyEnded':
-            break;
-        case 'spotifyPause':
-            break;
-        case 'spotifyAbort':
-            break;
     }
 });
 
@@ -85,6 +76,7 @@ function startCapture(initialVolume) {
                             audio.volume = data.volume;
                             break;
                         case 'spotifyPlay':
+                            chrome.storage.local.set({'track': data.track});
                             mediaRecorder.startRecording();
                             break;
                         case 'spotifyEnded':
@@ -97,10 +89,10 @@ function startCapture(initialVolume) {
 
                             mediaRecorder.finishRecording(data.track);
                             break;
-                        case 'spotifyPause':
                         case 'spotifyAbort':
                             mediaRecorder.cancelRecording();
                             break;
+                        case 'spotifyPause':
                         case 'stopCapture':
                             stopRecording();
                             break;
@@ -110,7 +102,7 @@ function startCapture(initialVolume) {
                 chrome.runtime.onMessage.addListener(mediaListener);
                 chrome.tabs.sendMessage(tab.id, {command: 'startRecording'});
 
-                chrome.storage.local.set({isRecording: true, tabId: tab.id});
+                chrome.storage.local.set({isRecording: true, tabId: tab.id, songCount: 0});
                 setRecordingIcon();
             });
         });
@@ -139,7 +131,7 @@ function handleWindowRemove() {
 
 // clear storage
 function resetStorage() {
-    chrome.storage.local.set({isRecording: false, tabId: 0, track: null});
+    chrome.storage.local.set({isRecording: false, tabId: 0, track: null, soungCount: 0});
 }
 
 // download file
@@ -150,8 +142,13 @@ function download(recorder, track) {
     const dir = `clipinc/${track.directory.replace(regex, ' ').trim()}`;
 
     let filename = `${dir}/${track.artist.replace(regex, ' ').trim()} - ${track.title.replace(regex, ' ').trim()}.mp3`;
-    console.log('download mp3: ', filename);
     chrome.downloads.download({url: track.url, filename, conflictAction: 'overwrite'});
+
+    chrome.storage.local.get(['songCount'], ({songCount}) => {
+        songCount++;
+        chrome.storage.local.set({songCount});
+        chrome.runtime.sendMessage(undefined, {command: 'downloaded', data: {songCount}});
+    });
 }
 
 // remove files from download shelf to stop spam

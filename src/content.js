@@ -179,7 +179,7 @@ chrome.runtime.onMessage.addListener(({command, data}, sender, sendResponse) => 
         case 'stopRecording':
             releaseVolumeControl();
             setVolume(data.volume);
-            pause();
+            setTimeout(pause, 100);
             break;
     }
 });
@@ -213,8 +213,6 @@ function hijackPlayer() {
         //event listener to increase volume for first track
         document.addEventListener('initplayer', () => {
             chrome.storage.local.get('isRecording', ({isRecording}) => {
-                console.log("initplayer, isRecording: ", isRecording);
-
                 if (isRecording) {
                     setVolume(1);
                 }

@@ -4,13 +4,26 @@ chrome.runtime.onMessage.addListener(({command, data}) => {
         case 'spotifyPlay':
             updateTrack(data.track);
             
-            chrome.storage.local.get(['isRecording'], ({isRecording}) => {
+            chrome.storage.local.get(['isRecording', 'songCount'], ({isRecording}) => {
                 if (isRecording) {
                     $body.classList.remove('hidden');
                 } else {
                     $body.classList.add('hidden');
                 }
             });
+            break;
+        case 'spotifyAbort':
+        case 'spotifyPause':
+            stopCapture();
+            break;
+        case 'downloaded':
+            const songCount = data.songCount;
+            $songCount.innerHTML = `${songCount} ${songCount === 1 ? 'Song' : 'Songs'} runtergeladen`;
+            if (songCount > 0) {
+                $songCount.classList.remove('hidden');
+            } else {
+                $songCount.classList.add('hidden');
+            }
             break;
     }
 });
@@ -21,7 +34,8 @@ $cover.addEventListener('error', () => {
 });
 
 const $body = document.querySelector('.body');
-const $recordLabel = document.querySelector('.record-label')
+const $recordLabel = document.querySelector('.record-label');
+const $songCount = document.querySelector('.song-count');
 const $switch = document.querySelector('#record');
 $switch.addEventListener('input', (event) => {
     $switch.setAttribute('disabled', 'true');
@@ -75,7 +89,7 @@ function updateProgressBar(track) {
     document.querySelector('.progress-bar-track').style.width = progress;
 }
 
-chrome.storage.local.get(['isRecording', 'track'], ({isRecording, track}) => {
+chrome.storage.local.get(['isRecording', 'track', 'songCount'], ({isRecording, track, songCount}) => {
     chrome.tabs.query({'active': true}, (tabs) => {
         if (!isRecording && tabs[0].url.indexOf('https://open.spotify.com') === -1) {
             document.querySelector('.intro').classList.remove('hidden');
@@ -90,6 +104,10 @@ chrome.storage.local.get(['isRecording', 'track'], ({isRecording, track}) => {
     if (isRecording) {
         $recordLabel.innerHTML = 'Aufnahme läuft...';
         $body.classList.remove('hidden');
+        if (songCount > 0) {
+            $songCount.innerHTML = `${songCount} ${songCount === 1 ? 'Song' : 'Songs'} runtergeladen`;
+            $songCount.classList.remove('hidden');
+        }
     } else {
         $recordLabel.innerHTML = 'Aufnahme starten';
         $body.classList.add('hidden');
