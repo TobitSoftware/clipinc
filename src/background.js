@@ -189,9 +189,16 @@ function download(recorder, track) {
     chrome.downloads.onChanged.addListener(cleanDownloadShelf);
 
     const regex = /[\\/:*?"<>|.]/g;
-    const dir = `clipinc/${track.directory.replace(regex, ' ').trim()}`;
+    let filename = `clipinc`;
 
-    let filename = `${dir}/${track.artist.replace(regex, ' ').trim()} - ${track.title.replace(regex, ' ').trim()}.mp3`;
+    if (track.directory) {
+        filename = `${filename}/${track.directory.replace(regex, ' ').trim()}`;
+    }
+
+    const title = track.title.replace(regex, ' ').trim();
+    const artist = track.artist.replace(regex, ' ').trim();
+
+    filename = `${filename}/${artist} - ${title}.mp3`;
     console.log('download mp3: ', filename);
     chrome.downloads.download({url: track.url, filename, conflictAction: 'overwrite'});
 }

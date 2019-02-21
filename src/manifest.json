@@ -1,6 +1,6 @@
 {
   "name": "__MSG_name__",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "__MSG_description__",
   "permissions": ["tabs", "tabCapture", "activeTab", "declarativeContent", "storage", "downloads", "downloads.shelf", "notifications"],
   "background": {
