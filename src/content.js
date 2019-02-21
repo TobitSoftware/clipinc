@@ -92,6 +92,20 @@ const seek = (position) => {
     });
 };
 
+const setPlayback = () => {
+    const token = `Bearer ${getAccessToken()}`
+
+    return fetch('https://api.spotify.com/v1/me/player/devices', {
+        headers: {
+            'Authorization': token
+        }
+    })
+        .then((res) => res.json())
+        .then((devices) => {
+            console.log(devices);
+        });
+}
+
 // parses duration to ms
 function durationToMs(duration) {
     const times = duration.split(':');
@@ -192,9 +206,7 @@ chrome.runtime.onMessage.addListener(({command, data}, sender, sendResponse) => 
             sendResponse({volume: oldVolume, error});
             break;
         case 'startRecording':
-            seek(0).then(() => {}, () => {}).then(() => {
-                play();
-            });
+            startPlayback();
             break;
         case 'stopRecording':
             releaseVolumeControl();
