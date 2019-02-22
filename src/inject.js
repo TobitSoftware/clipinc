@@ -23,6 +23,7 @@
             element.addEventListener('ended', dispatchToDocument);
             element.addEventListener('pause', dispatchToDocument);
             element.addEventListener('abort', dispatchToDocument);
+            element.addEventListener('seeking', dispatchToDocument);
 
             document.addEventListener('setvolume', (event) => element.volume = event.detail.volume);
 

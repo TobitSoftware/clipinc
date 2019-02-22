@@ -22,6 +22,12 @@ function handlePlayerPause() {
     chrome.runtime.sendMessage({command: 'spotifyPause', data: {}});
 }
 
+// handle player pause event
+function handlePlayerSeek(event) {
+    console.log(event);
+    chrome.runtime.sendMessage({command: 'spotifySeeking', data: {}});
+}
+
 // handle player volume change event
 function handlePlayerVolumeInput(event) {
     chrome.runtime.sendMessage({command: 'setVolume', data: {volume: parseFloat(event.target.value)}});
@@ -82,29 +88,6 @@ const getTrackInfo = () => new Promise((resolve) => {
             })
         });
 });
-
-const seek = (position) => {
-    return fetch(`https://api.spotify.com/v1/me/player/seek?position_ms=${position}`, {
-        method: 'PUT',
-        headers: {
-            'Authorization': `Bearer ${getAccessToken()}`
-        }
-    });
-};
-
-const setPlayback = () => {
-    const token = `Bearer ${getAccessToken()}`
-
-    return fetch('https://api.spotify.com/v1/me/player/devices', {
-        headers: {
-            'Authorization': token
-        }
-    })
-        .then((res) => res.json())
-        .then((devices) => {
-            console.log(devices);
-        });
-}
 
 // parses duration to ms
 function durationToMs(duration) {
@@ -206,27 +189,39 @@ chrome.runtime.onMessage.addListener(({command, data}, sender, sendResponse) => 
             sendResponse({volume: oldVolume, error});
             break;
         case 'startRecording':
-            startPlayback();
+            skipBack();
+            play();
+            setTimeout(play, 1000);
             break;
         case 'stopRecording':
             releaseVolumeControl();
             setVolume(data.volume);
-            setTimeout(pause, 100);
+            setTimeout(pause, 1000);
             break;
     }
 });
 
 function play() {
-    const play = document.querySelector('.control-button.spoticon-play-16');
-    if (play) {
-        play.click();
+    const el = document.querySelector('.control-button.spoticon-play-16');
+    if (el) {
+        console.log("play");
+        el.click();
     }
 }
 
 function pause() {
-    const pause = document.querySelector('.control-button.spoticon-pause-16');
-    if (pause) {
-        pause.click();
+    const el = document.querySelector('.control-button.spoticon-pause-16');
+    if (el) {
+        console.log("pause");
+        el.click();
+    }
+}
+
+function skipBack() {
+    const el = document.querySelector('.control-button.spoticon-skip-back-16');
+    if (el) {
+        console.log("skipBack");
+        el.click();
     }
 }
 
@@ -241,6 +236,7 @@ function hijackPlayer() {
         document.addEventListener('ended', handlePlayerEnded);
         document.addEventListener('pause', handlePlayerPause);
         document.addEventListener('abort', handlePlayerAbort);
+        document.addEventListener('seeking', handlePlayerSeek);
 
         //event listener to increase volume for first track
         document.addEventListener('initplayer', () => {
