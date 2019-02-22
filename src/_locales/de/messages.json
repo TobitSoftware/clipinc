@@ -6,7 +6,7 @@
     "message": "Hol Dir die Songs von Spotify als lupenreinen MP3-Mitschnitt auf Deine Festplatte!"
   },
   "errorChangeDevice": {
-    "message": "Wähle unter \"Mit Gerät verbinden\" dieses Gerät aus, damit die Aufnahme gestarten kann."
+    "message": "Wähle unter \"Mit Gerät verbinden\" dieses Gerät aus, damit die Aufnahme gestartet werden kann."
   },
   "notificationDownloaded": {
     "message": "##TITLE## - ##ARTIST## wurde erfolgreich aufgenommen."
