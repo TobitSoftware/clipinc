@@ -188,8 +188,13 @@ chrome.runtime.onMessage.addListener(({command, data}, sender, sendResponse) => 
             break;
         case 'startRecording':
             skipBack();
-            play();
-            setTimeout(play, 1000);
+            setTimeout(() => {
+                if (!play()) {
+                    // if track is already running when starting the recording
+                    // dispatch play event so the track is known to clipinc
+                    handlePlayerPlay();
+                }
+            }, 1000);
             break;
         case 'stopRecording':
             releaseVolumeControl();
@@ -203,7 +208,10 @@ function play() {
     if (el) {
         console.log("play");
         el.click();
+        return true;
     }
+
+    return false;
 }
 
 function pause() {
@@ -211,7 +219,10 @@ function pause() {
     if (el) {
         console.log("pause");
         el.click();
+        return true;
     }
+
+    return false;
 }
 
 function skipBack() {
@@ -219,7 +230,10 @@ function skipBack() {
     if (el) {
         console.log("skipBack");
         el.click();
+        return true;
     }
+
+    return false;
 }
 
 //load inject.js to start the player hijack
