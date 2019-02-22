@@ -13,7 +13,7 @@ chrome.runtime.onMessage.addListener(({command, data}, sender, sendResponse) => 
 
     switch(command) {
         case 'startCapture':
-            startCapture(data.volume)
+            startCapture()
                 .then(() => {
                     sendResponse({success: true});
                 }, () => {
@@ -26,7 +26,7 @@ chrome.runtime.onMessage.addListener(({command, data}, sender, sendResponse) => 
 });
 
 // start tab capturing
-const startCapture = (initialVolume) => new Promise((resolve, reject) => {
+const startCapture = () => new Promise((resolve, reject) => {
     chrome.tabs.query({'active': true, 'currentWindow': true}, (tabs) => {
         const tab = tabs[0];
 
@@ -61,7 +61,7 @@ const startCapture = (initialVolume) => new Promise((resolve, reject) => {
                 //restore audio for user
                 const audio = new Audio();
                 audio.srcObject = stream;
-                audio.volume = initialVolume;
+                audio.volume = response.volume;
                 audio.play();
 
                 //140e1f61f387e586101ab77f507a5e3df2d7d46f
