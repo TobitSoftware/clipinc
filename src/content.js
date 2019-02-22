@@ -172,12 +172,10 @@ chrome.runtime.onMessage.addListener(({command, data}, sender, sendResponse) => 
             const isReady = document.querySelector('body.clipinc-ready') !== null;
 
             if (!isReady) {
-                console.log("we not ready tho");
                 location.reload();
                 return;
             }
 
-            console.log(getIsLocalDevice());
             const error = !getIsLocalDevice() ? 'cannot record from remote device' : undefined;
             const oldVolume = getVolume();
             
@@ -196,7 +194,6 @@ chrome.runtime.onMessage.addListener(({command, data}, sender, sendResponse) => 
         case 'stopRecording':
             releaseVolumeControl();
             setVolume(data.volume);
-            setTimeout(pause, 1000);
             break;
     }
 });
