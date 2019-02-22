@@ -52,6 +52,7 @@ $switch.addEventListener('input', (event) => {
             });
         });
     } else {
+        chrome.runtime.sendMessage({command: 'stopCapture', data: {}});
         chrome.storage.local.set({track: null});
         $recordLabel.innerHTML = 'Aufnahme starten';
         $body.classList.add('hidden');
