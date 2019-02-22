@@ -45,9 +45,12 @@ $switch.addEventListener('input', (event) => {
             chrome.runtime.sendMessage({command: 'startCapture', data: {volume: volume || 1}}, {}, (resp) => {
                 $switch.checked = resp.success;
                 $switch.removeAttribute('disabled');
+
+                if (resp.success) {
+                    $recordLabel.innerHTML = 'Aufnahme läuft...';
+                }
             });
         });
-        $recordLabel.innerHTML = 'Aufnahme läuft...';
     } else {
         chrome.storage.local.set({track: null});
         $recordLabel.innerHTML = 'Aufnahme starten';
