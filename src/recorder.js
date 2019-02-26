@@ -13,7 +13,6 @@ class Recorder {
 
         this.input = this.context.createGain();
         source.connect(this.input);
-        this.buffer = [];
 
         this.initWorker();
     }
@@ -27,7 +26,7 @@ class Recorder {
             return;
         }
 
-        const buffer = this.buffer;
+        const buffer = [];
         const worker = this.worker;
 
         this.processor = this.context.createScriptProcessor(OPTIONS.bufferSize, OPTIONS.numChannels, OPTIONS.numChannels);

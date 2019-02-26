@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>$Title$</title>
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300" rel="stylesheet">
+    <link rel="stylesheet" href="popup.css">
+<body>
+<div class="intro">
+        <img class="logo" src="../images/intro.png" alt="">
+        <div class="text">
+            Öffne Spotify und melde Dich mit Deinem Konto an.
+        </div>
+        <button class="button">Spotify öffnen</button>
+</div>
+<div class="wrapper hidden">
+    <div class="head">
+        <div style="display: inline-block;">
+            <input id="record" class="switch" type="checkbox">
+            <label for="record"></label>
+            <span class="record-label">Aufnahme starten</span>
+        </div>
+        <div style="display: inline-block;">
+            <img class="logo" src="../images/logo.png" alt="">
+        </div>
+    </div>
+    <div class="body hidden">
+        <div class="track">
+            <img class="cover" src="">
+            <div>
+                <div class="title ellipsis"></div>
+                <div class="artist ellipsis"></div>
+            </div>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-bar-track" style="width: 0%;">
+            </div>
+        </div>
+        <div class="footer">
+            <div>
+                <div class="downloaded song-count hidden">
+                    0 Songs aufgenommen
+                </div>
+            </div>
+            <div class="show-downloads">
+                Ordner anzeigen
+            </div>
+        </div>
+    </div>
+</div>
+<script src="popup.js"></script>
+</body>
+</html>

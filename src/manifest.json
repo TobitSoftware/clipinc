@@ -1,17 +1,18 @@
 {
   "name": "__MSG_name__",
-  "version": "1.0.8",
+  "version": "1.1.0",
   "description": "__MSG_description__",
   "permissions": ["tabs", "tabCapture", "activeTab", "declarativeContent", "storage", "downloads", "downloads.shelf", "notifications"],
   "background": {
     "scripts": ["recorder.js", "background.js"]
   },
   "browser_action": {
+    "default_popup": "popup/popup.html",
     "default_icon": {
-      "16": "images/clipinc-16-disable.png",
-      "32": "images/clipinc-32-disable.png",
-      "48": "images/clipinc-48-disable.png",
-      "128": "images/clipinc-128-disable.png"
+      "16": "images/clipinc-16.png",
+      "32": "images/clipinc-32.png",
+      "48": "images/clipinc-48.png",
+      "128": "images/clipinc-128.png"
     }
   },
   "content_scripts": [{
@@ -27,6 +28,6 @@
   },
   "manifest_version": 2,
   "web_accessible_resources": ["inject.js"],
-  "default_locale": "en"
+  "default_locale": "de"
 }
 

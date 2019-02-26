@@ -9,11 +9,7 @@
             return;
         }
 
-        const e = new CustomEvent(event.type, {
-            detail: {
-                volume: event.target.volume
-            }
-        });
+        const e = new CustomEvent(event.type, {});
         document.dispatchEvent(e)
     }
 
@@ -27,6 +23,7 @@
             element.addEventListener('ended', dispatchToDocument);
             element.addEventListener('pause', dispatchToDocument);
             element.addEventListener('abort', dispatchToDocument);
+            element.addEventListener('seeking', dispatchToDocument);
 
             document.addEventListener('setvolume', (event) => element.volume = event.detail.volume);
 
@@ -36,4 +33,6 @@
 
         return element
     };
+
+    document.body.classList.add('clipinc-ready');
 })();

@@ -1,23 +1,31 @@
 // handle player play event
 function handlePlayerPlay() {
-    chrome.runtime.sendMessage({command: 'play', data: {}});
+    getTrackInfo().then((track) => {
+        chrome.runtime.sendMessage({command: 'spotifyPlay', data: { track }});
+    });
 }
 
 // handle player ended event
 function handlePlayerEnded() {
     getTrackInfo().then((track) => {
-        chrome.runtime.sendMessage({command: 'ended', data: { track }});
+        chrome.runtime.sendMessage({command: 'spotifyEnded', data: { track }});
     });
 }
 
 // handle player abort event
 function handlePlayerAbort() {
-    chrome.runtime.sendMessage({command: 'abort', data: {}});
+    chrome.runtime.sendMessage({command: 'spotifyAbort', data: {}});
 }
 
 // handle player pause event
 function handlePlayerPause() {
-    chrome.runtime.sendMessage({command: 'pause', data: {}});
+    chrome.runtime.sendMessage({command: 'spotifyPause', data: {}});
+}
+
+// handle player pause event
+function handlePlayerSeek(event) {
+    console.log(event);
+    chrome.runtime.sendMessage({command: 'spotifySeeking', data: {}});
 }
 
 // handle player volume change event
@@ -53,6 +61,8 @@ const getTrackInfo = () => new Promise((resolve) => {
                 isPremium,
                 kbps: isPremium ? 256 : 128,
                 directory: isGroup ? lastPlayed : undefined,
+                progress: t.progress_ms,
+                startTime: new Date()
             });
         })
         .catch((err) => {
@@ -73,6 +83,8 @@ const getTrackInfo = () => new Promise((resolve) => {
                 isPremium,
                 kbps: isPremium ? 256 : 128,
                 directory: isGroup ? lastPlayed : undefined,
+                progress: 0,
+                startTime: Date.now()
             })
         });
 });
@@ -88,7 +100,7 @@ function getCookie(key) {
     const cookies = document.cookie.split('; ');
 
     for (let i = 0, l = cookies.length; i < l; i++) {
-        let c = cookies[i].split('=');
+        const c = cookies[i].split('=');
         if (c[0] === key) {
             return c[1];
         }
@@ -103,7 +115,7 @@ function getAccessToken() {
 
 // checks if playback is on the local device
 function getIsLocalDevice() {
-    return document.querySelector('.connect-bar') === null;
+    return document.querySelector('.ConnectBar') === null;
 }
 
 // get current volume from dom
@@ -155,12 +167,18 @@ function releaseVolumeControl() {
 }
 
 chrome.runtime.onMessage.addListener(({command, data}, sender, sendResponse) => {
-    let error;
     switch (command) {
         case 'prepareRecording':
-            error = !getIsLocalDevice() ? 'cannot record from remote device' : undefined;
-            const oldVolume = getVolume();
+            const isReady = document.querySelector('body.clipinc-ready') !== null;
 
+            if (!isReady) {
+                location.reload();
+                return;
+            }
+
+            const error = !getIsLocalDevice() ? 'cannot record from remote device' : undefined;
+            const oldVolume = getVolume();
+            
             if (!error) {
                 hijackVolumeControl();
                 setVolume(1);
@@ -169,21 +187,54 @@ chrome.runtime.onMessage.addListener(({command, data}, sender, sendResponse) => 
             sendResponse({volume: oldVolume, error});
             break;
         case 'startRecording':
-            const play = document.querySelector('.control-button.spoticon-play-16');
-            if (play) {
-                play.click();
-            }
+            skipBack();
+            setTimeout(() => {
+                if (!play()) {
+                    // if track is already running when starting the recording
+                    // dispatch play event so the track is known to clipinc
+                    handlePlayerPlay();
+                }
+            }, 1000);
             break;
         case 'stopRecording':
             releaseVolumeControl();
             setVolume(data.volume);
-            const pause = document.querySelector('.control-button.spoticon-pause-16');
-            if (pause) {
-                pause.click();
-            }
             break;
     }
 });
+
+function play() {
+    const el = document.querySelector('.control-button.spoticon-play-16');
+    if (el) {
+        console.log("play");
+        el.click();
+        return true;
+    }
+
+    return false;
+}
+
+function pause() {
+    const el = document.querySelector('.control-button.spoticon-pause-16');
+    if (el) {
+        console.log("pause");
+        el.click();
+        return true;
+    }
+
+    return false;
+}
+
+function skipBack() {
+    const el = document.querySelector('.control-button.spoticon-skip-back-16');
+    if (el) {
+        console.log("skipBack");
+        el.click();
+        return true;
+    }
+
+    return false;
+}
 
 //load inject.js to start the player hijack
 function hijackPlayer() {
@@ -196,12 +247,11 @@ function hijackPlayer() {
         document.addEventListener('ended', handlePlayerEnded);
         document.addEventListener('pause', handlePlayerPause);
         document.addEventListener('abort', handlePlayerAbort);
+        document.addEventListener('seeking', handlePlayerSeek);
 
         //event listener to increase volume for first track
         document.addEventListener('initplayer', () => {
             chrome.storage.local.get('isRecording', ({isRecording}) => {
-                console.log("initplayer, isRecording: ", isRecording);
-
                 if (isRecording) {
                     setVolume(1);
                 }
@@ -212,6 +262,7 @@ function hijackPlayer() {
         chrome.storage.local.get('isRecording', ({isRecording}) => {
             if (isRecording) {
                 hijackVolumeControl();
+                play();
             }
         });
     };

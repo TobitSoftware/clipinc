@@ -1,7 +1,7 @@
 importScripts('/../encoders/Mp3Encoder.min.js');
 importScripts('/../encoders/browser-id3-writer.js');
 
-const NUM_CH = 2; // constant
+const NUM_CH = 2;
 let sampleRate = 44100,
     options = undefined,
     encoder = undefined,
@@ -9,10 +9,12 @@ let sampleRate = 44100,
     bufferCount = 0;
 
 function error(message) {
+    console.debug('error');
     self.postMessage({command: 'error', message: `Mp3Worker: ${message}`});
 }
 
 function init(data) {
+    console.debug('init');
     if (data.config.numChannels === NUM_CH) {
         sampleRate = data.config.sampleRate;
         options = data.options;
@@ -22,19 +24,24 @@ function init(data) {
 }
 
 function start() {
+    console.debug('start', []);
     recBuffers = [];
 }
 
 function record(buffer) {
+    console.debug('record', bufferCount, buffer);
     bufferCount++;
     recBuffers.push(buffer);
 }
 
 function postProgress(progress) {
+    console.debug('progress', progress);
     self.postMessage({command: 'progress', progress});
 }
 
 function finish(track) {
+    console.debug('finish', recBuffers);
+
     if (recBuffers) {
         postProgress(0);
         encoder = new Mp3LameEncoder(sampleRate, track.kbps);
@@ -69,6 +76,8 @@ function finish(track) {
 
     Promise.all([filePromise, imagePromise])
         .then(([file, cover]) => {
+            console.debug('got file and image');
+
             const writer = new ID3Writer(file);
             writer.setFrame('TPE1', [track.artist])
                 .setFrame('TIT2', track.title)
@@ -109,6 +118,7 @@ function finish(track) {
 
             writer.addTag();
 
+            console.debug('done');
             track.url = writer.getURL();
             self.postMessage({
                 command: 'complete',
@@ -118,6 +128,7 @@ function finish(track) {
 }
 
 function cleanup() {
+    console.debug('cleanup');
     encoder = recBuffers = undefined;
     bufferCount = 0;
 }

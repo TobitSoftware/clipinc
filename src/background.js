@@ -8,99 +8,47 @@ chrome.runtime.onStartup.addListener(resetStorage);
 chrome.tabs.onRemoved.addListener(handleTabRemove);
 chrome.windows.onRemoved.addListener(handleWindowRemove);
 
-//handle tab / window focus change
-chrome.tabs.onActivated.addListener(handleFocusChange);
-chrome.windows.onFocusChanged.addListener(handleFocusChange);
+chrome.runtime.onMessage.addListener(({command, data}, sender, sendResponse) => {
+    console.log('background.js: ', command, data);
 
-// extension icon click
-chrome.browserAction.onClicked.addListener(handleIconClick);
-
-// delete storage if the tab that was recorded is closed
-function handleTabRemove(id) {
-    chrome.storage.local.get(['tabId'], ({tabId}) => {
-        if (tabId && id === tabId) {
-            resetStorage();
-        }
-    });
-}
-
-// delete storage if the window that was recording was closed
-function handleWindowRemove() {
-    chrome.storage.local.get(['tabId'], ({tabId}) => {
-        chrome.tabs.get(tabId, (tab) => {
-            if (tab !== 0 && (chrome.runtime.lastError || !tab)) {
-                resetStorage();
-            }
-        });
-    });
-}
-
-// called when focus of tab / window changes
-// if the website that is opened is not spotify, set the icon to the disabled one
-// otherwise check if the current spotify tab is the tab that is recorded
-// start / stop recording based on state
-function handleFocusChange() {
-    chrome.tabs.getSelected((tab) => {
-        if (chrome.runtime.lastError || !tab || tab.url.indexOf('https://open.spotify.com') === -1) {
-            setDisabledIcon();
-        } else {
-            chrome.storage.local.get(['tabId', 'isRecording'], ({tabId, isRecording}) => {
-                if (!tab.tabId || tab.tabId === id) {
-                    if (isRecording) {
-                        setRecordingIcon();
-                    } else {
-                        setDefaultIcon();
-                    }
-                } else {
-                    setDisabledIcon();
-                }
-            });
-        }
-    });
-}
-
-// handle extension icon click
-// update selected tab, open url or start capture based on current state
-function handleIconClick() {
-    chrome.storage.local.get(['isRecording', 'tabId'], ({isRecording, tabId}) => {
-        chrome.tabs.getSelected((tab) => {
-            if (tab && tabId && tab.id !== tabId) {
-                chrome.tabs.get(tabId, ({index}) => {
-                    chrome.tabs.highlight({
-                        tabs: [index]
-                    });
+    switch(command) {
+        case 'startCapture':
+            startCapture()
+                .then(() => {
+                    sendResponse({success: true});
+                }, () => {
+                    sendResponse({success: false});
                 });
-            } else if (chrome.runtime.lastError || tab.url.indexOf('https://open.spotify.com') === -1) {
-                chrome.tabs.create({
-                    url: 'https://open.spotify.com'
-                });
-            } else if (!isRecording) {
-                console.log('startCapture');
-                startCapture();
-            }
-        });
-    });
-}
+            break;
+    }
+
+    return true;
+});
 
 // start tab capturing
-function startCapture() {
-    chrome.tabs.getSelected((tab) => {
+const startCapture = () => new Promise((resolve, reject) => {
+    chrome.tabs.query({'active': true, 'currentWindow': true}, (tabs) => {
+        const tab = tabs[0];
+
         chrome.tabs.sendMessage(tab.id, {command: 'prepareRecording'}, {}, (response) => {
-            if (response.error) {
+            if (response && response.error) {
                 chrome.notifications.create('clipincError', {
                     type: 'basic',
                     title: chrome.i18n.getMessage('name'),
                     message: chrome.i18n.getMessage('errorChangeDevice'),
                     iconUrl: 'images/clipinc-128.png'
-                }, console.log.bind(console));
-
+                }, console.debug.bind(console));
+                
                 console.error(response.error);
+
+                reject();
                 return;
             }
 
             chrome.tabCapture.capture({audio: true}, (stream) => {
-                if (!stream) {
-                    console.error(chrome.runtime.lastError);
+                if (chrome.runtime.lastError || !stream) {
+                    console.error(chrome.runtime.lastError || 'No stream found');
+                    reject();
                     return;
                 }
 
@@ -116,46 +64,11 @@ function startCapture() {
                 audio.volume = response.volume;
                 audio.play();
 
-                const mediaListener = ({command, data}) => {
-                    switch (command) {
-                        case 'setVolume':
-                            console.log('set volume to', data.volume);
-                            audio.volume = data.volume;
-                            break;
-                        case 'play':
-                            console.log('start recording');
-                            mediaRecorder.startRecording();
-                            break;
-                        case 'ended':
-                            console.log('finish recording');
+                //140e1f61f387e586101ab77f507a5e3df2d7d46f
 
-                            console.log('data', data.track);
-                            // used to skip ads
-                            if (!data.track.isPremium && data.track.duration <= 30) {
-                                console.log('track is shorter than or equal to 30 seconds, discarding');
-                                mediaRecorder.cancelRecording();
-                                break;
-                            }
-
-                            mediaRecorder.finishRecording(data.track);
-                            break;
-                        case 'pause':
-                        case 'abort':
-                            console.log('cancel current track');
-                            mediaRecorder.cancelRecording();
-                            break;
-                    }
-                };
-
-                const handleStopIconClick = () => chrome.tabs.getSelected((currentTab) => {
-                    if (currentTab.id !== tab.id) {
-                        return;
-                    }
-
-                    console.log('clean up');
-
+                const stopRecording = () => {
                     chrome.runtime.onMessage.removeListener(mediaListener);
-                    chrome.browserAction.onClicked.removeListener(handleStopIconClick);
+                    chrome.tabs.onUpdated.removeListener(updateListener);
 
                     mediaRecorder.cancelRecording();
                     mediaRecorder.onComplete = () => {};
@@ -163,25 +76,91 @@ function startCapture() {
                     audioCtx.close();
                     stream.getAudioTracks()[0].stop();
 
-                    setDefaultIcon();
-                    resetStorage();
+                    reset();
                     chrome.tabs.sendMessage(tab.id, {command: 'stopRecording', data: {volume: audio.volume}});
-                });
+                    
+                    chrome.notifications.create('clipincStop', {
+                        type: 'basic',
+                        title: chrome.i18n.getMessage('name'),
+                        message: chrome.i18n.getMessage('notificationStop'),
+                        iconUrl: 'images/clipinc-128.png'
+                    }, console.debug.bind(console));
+                };
+
+                const mediaListener = ({command, data}) => {
+                    console.log('background.js', "mediaListener", command, data);
+
+                    switch (command) {
+                        case 'setVolume':
+                            audio.volume = data.volume;
+                            break;
+                        case 'spotifyPlay':
+                            chrome.storage.local.set({'track': data.track});
+                            mediaRecorder.startRecording();
+                            break;
+                        case 'spotifyEnded':
+                            // used to skip ads
+                            if (!data.track.isPremium && data.track.duration <= 30) {
+                                console.log('track is shorter than or equal to 30 seconds, user has no premium, discarding track');
+                                mediaRecorder.cancelRecording();
+                                break;
+                            }
+
+                            mediaRecorder.finishRecording(data.track);
+                            break;
+                        case 'spotifyAbort':
+                            mediaRecorder.cancelRecording();
+                            break;
+                        case 'spotifyPause':
+                        case 'stopCapture':
+                            stopRecording();
+                            break;
+                    }
+                };
+
+                const updateListener = (id, changeInfo) => {
+                    chrome.storage.local.get(['tabId'], ({tabId}) => {
+                        if (tabId === id && changeInfo.status === 'loading') {
+                            stopRecording();
+                        }
+                    });
+                }
 
                 chrome.runtime.onMessage.addListener(mediaListener);
-                chrome.browserAction.onClicked.addListener(handleStopIconClick);
+                chrome.tabs.onUpdated.addListener(updateListener);
                 chrome.tabs.sendMessage(tab.id, {command: 'startRecording'});
 
-                chrome.storage.local.set({isRecording: true, tabId: tab.id});
+                chrome.storage.local.set({isRecording: true, tabId: tab.id, songCount: 0});
                 setRecordingIcon();
+                resolve();
             });
+        });
+    });
+});
+
+// delete storage if the tab that was recorded is closed
+function handleTabRemove(id) {
+    chrome.storage.local.get(['tabId'], ({tabId}) => {
+        if (tabId && id === tabId) {
+            reset();
+        }
+    });
+}
+
+// delete storage if the window that was recording was closed
+function handleWindowRemove() {
+    chrome.storage.local.get(['tabId'], ({tabId}) => {
+        chrome.tabs.get(tabId, (tab) => {
+            if (tab !== 0 && (chrome.runtime.lastError || !tab)) {
+                reset();
+            }
         });
     });
 }
 
 // clear storage
 function resetStorage() {
-    chrome.storage.local.set({isRecording: false, tabId: 0, track: null});
+    chrome.storage.local.set({isRecording: false, tabId: 0, track: null, soungCount: 0});
 }
 
 // download file
@@ -199,8 +178,24 @@ function download(recorder, track) {
     const artist = track.artist.replace(regex, ' ').trim();
 
     filename = `${filename}/${artist} - ${title}.mp3`;
-    console.log('download mp3: ', filename);
     chrome.downloads.download({url: track.url, filename, conflictAction: 'overwrite'});
+
+    chrome.storage.local.get(['songCount'], ({songCount}) => {
+        songCount++;
+        chrome.storage.local.set({songCount});
+        chrome.runtime.sendMessage(undefined, {command: 'downloaded', data: {songCount}});
+    });
+
+    let message = chrome.i18n.getMessage('notificationDownloaded');
+    message = message.replace('##TITLE##', track.title);
+    message = message.replace('##ARTIST##', track.artist);
+
+    chrome.notifications.create('clipincDownloaded', {
+        type: 'basic',
+        title: chrome.i18n.getMessage('name'),
+        message,
+        iconUrl: 'images/clipinc-128.png'
+    }, console.debug.bind(console));
 }
 
 // remove files from download shelf to stop spam
@@ -229,10 +224,6 @@ function setDefaultIcon() {
             '128': 'images/clipinc-128.png'
         }
     });
-
-    chrome.browserAction.setTitle({
-        title: chrome.i18n.getMessage('nameStart')
-    });
 }
 
 // set icon to recording
@@ -245,24 +236,9 @@ function setRecordingIcon() {
             '128': 'images/clipinc-128-record.png'
         }
     });
-
-    chrome.browserAction.setTitle({
-        title: chrome.i18n.getMessage('nameRecording')
-    });
 }
 
-// set icon to disabled
-function setDisabledIcon() {
-    chrome.browserAction.setIcon({
-        path: {
-            '16': 'images/clipinc-16-disable.png',
-            '32': 'images/clipinc-32-disable.png',
-            '48': 'images/clipinc-48-disable.png',
-            '128': 'images/clipinc-128-disable.png'
-        }
-    });
-
-    chrome.browserAction.setTitle({
-        title: chrome.i18n.getMessage('name')
-    });
+function reset() {
+    resetStorage();
+    setDefaultIcon();
 }
