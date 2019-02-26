@@ -75,6 +75,7 @@ body {
     border-radius: 8px;
     display: inline-block;
     margin-right: 16px;
+    cursor: pointer;
 }
 
 .switch + label:before {

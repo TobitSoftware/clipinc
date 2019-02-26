@@ -52,7 +52,7 @@ const getTrackInfo = () => new Promise((resolve) => {
                 title: track.name,
                 artist: track.artists.reduce((acc, a) => acc + (acc ? ', ' : '') + a.name, ''),
                 duration: track.duration_ms,
-                cover: track.album.images[2].url,
+                cover: track.album.images ? track.album.images[0].url : undefined,
                 album: track.album.name,
                 discNumber: track.disc_number,
                 trackNumber: track.track_number,
