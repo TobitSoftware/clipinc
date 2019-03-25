@@ -1,14 +1,14 @@
 // handle player play event
 function handlePlayerPlay() {
     getTrackInfo().then((track) => {
-        chrome.runtime.sendMessage({command: 'spotifyPlay', data: { track }});
+        chrome.runtime.sendMessage({command: 'spotifyPlay', data: {track}});
     });
 }
 
 // handle player ended event
 function handlePlayerEnded() {
     getTrackInfo().then((track) => {
-        chrome.runtime.sendMessage({command: 'spotifyEnded', data: { track }});
+        chrome.runtime.sendMessage({command: 'spotifyEnded', data: {track}});
     });
 }
 
@@ -178,7 +178,7 @@ chrome.runtime.onMessage.addListener(({command, data}, sender, sendResponse) => 
 
             const error = !getIsLocalDevice() ? 'cannot record from remote device' : undefined;
             const oldVolume = getVolume();
-            
+
             if (!error) {
                 hijackVolumeControl();
                 setVolume(1);

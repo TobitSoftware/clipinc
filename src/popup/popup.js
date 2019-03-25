@@ -1,9 +1,9 @@
 chrome.runtime.onMessage.addListener(({command, data}) => {
     console.log('popup.js', command, data);
-    switch(command) {
+    switch (command) {
         case 'spotifyPlay':
             updateTrack(data.track);
-            
+
             chrome.storage.local.get(['isRecording', 'songCount'], ({isRecording}) => {
                 if (isRecording) {
                     $body.classList.remove('hidden');
@@ -69,7 +69,7 @@ $button.addEventListener('click', () => {
             chrome.tabs.create({
                 url: 'https://accounts.spotify.com/de/login?continue=https:%2F%2Fopen.spotify.com%2Fbrowse%2Ffeatured'
             });
-    
+
             window.close();
         }
     });

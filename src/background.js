@@ -11,7 +11,7 @@ chrome.windows.onRemoved.addListener(handleWindowRemove);
 chrome.runtime.onMessage.addListener(({command, data}, sender, sendResponse) => {
     console.log('background.js: ', command, data);
 
-    switch(command) {
+    switch (command) {
         case 'startCapture':
             startCapture()
                 .then(() => {
@@ -38,7 +38,7 @@ const startCapture = () => new Promise((resolve, reject) => {
                     message: chrome.i18n.getMessage('errorChangeDevice'),
                     iconUrl: 'images/clipinc-128.png'
                 }, console.debug.bind(console));
-                
+
                 console.error(response.error);
 
                 reject();
@@ -71,14 +71,15 @@ const startCapture = () => new Promise((resolve, reject) => {
                     chrome.tabs.onUpdated.removeListener(updateListener);
 
                     mediaRecorder.cancelRecording();
-                    mediaRecorder.onComplete = () => {};
+                    mediaRecorder.onComplete = () => {
+                    };
 
                     audioCtx.close();
                     stream.getAudioTracks()[0].stop();
 
                     reset();
                     chrome.tabs.sendMessage(tab.id, {command: 'stopRecording', data: {volume: audio.volume}});
-                    
+
                     chrome.notifications.create('clipincStop', {
                         type: 'basic',
                         title: chrome.i18n.getMessage('name'),
@@ -124,7 +125,7 @@ const startCapture = () => new Promise((resolve, reject) => {
                             stopRecording();
                         }
                     });
-                }
+                };
 
                 chrome.runtime.onMessage.addListener(mediaListener);
                 chrome.tabs.onUpdated.addListener(updateListener);
