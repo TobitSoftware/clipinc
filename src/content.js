@@ -1,19 +1,24 @@
+let trackTimeout;
+
 // handle player play event
 function handlePlayerPlay() {
-    getTrackInfo().then((track) => {
-        chrome.runtime.sendMessage({command: 'spotifyPlay', data: {track}});
-    });
+    chrome.runtime.sendMessage({command: 'spotifyPlay', data: {track: getLocalTrackInfo()}});
+    trackTimeout = setTimeout(() => {
+        getTrackInfo().then((track) => {
+            chrome.runtime.sendMessage({command: 'spotifyUpdateTrack', data: {track}});
+        });
+    }, 1000);
 }
 
 // handle player ended event
 function handlePlayerEnded() {
-    getTrackInfo().then((track) => {
-        chrome.runtime.sendMessage({command: 'spotifyEnded', data: {track}});
-    });
+    clearTimeout(trackTimeout);
+    chrome.runtime.sendMessage({command: 'spotifyEnded', data: {}});
 }
 
 // handle player abort event
 function handlePlayerAbort() {
+    clearTimeout(trackTimeout);
     chrome.runtime.sendMessage({command: 'spotifyAbort', data: {}});
 }
 
@@ -23,8 +28,7 @@ function handlePlayerPause() {
 }
 
 // handle player pause event
-function handlePlayerSeek(event) {
-    console.log(event);
+function handlePlayerSeek() {
     chrome.runtime.sendMessage({command: 'spotifySeeking', data: {}});
 }
 
@@ -46,6 +50,13 @@ const getTrackInfo = () => new Promise((resolve) => {
         }
     }).then(res => res.json())
         .then((t) => {
+            if (t.currently_playing_type === 'ad') {
+                const track = getLocalTrackInfo();
+                track.type = 'ad';
+                resolve(track);
+                return;
+            }
+
             const track = t.item;
 
             resolve({
@@ -67,27 +78,35 @@ const getTrackInfo = () => new Promise((resolve) => {
         })
         .catch((err) => {
             console.error('clipinc: could not retrieve remote track info', err);
-
-            const nowPlayingBar = document.querySelector('div.now-playing-bar');
-
-            const artist = nowPlayingBar.querySelector('.track-info__artists').innerText;
-            const title = nowPlayingBar.querySelector('.track-info__name').innerText;
-            const duration = nowPlayingBar.querySelector('.progress-bar + .playback-bar__progress-time').innerText;
-            const cover = nowPlayingBar.querySelector('.cover-art-image').style.backgroundImage;
-
-            resolve({
-                artist,
-                title,
-                duration: durationToMs(duration),
-                cover: cover.substring('url("'.length, cover.length - '")'.length),
-                isPremium,
-                kbps: isPremium ? 256 : 128,
-                directory: isGroup ? lastPlayed : undefined,
-                progress: 0,
-                startTime: Date.now()
-            })
+            resolve(getLocalTrackInfo());
         });
 });
+
+function getLocalTrackInfo() {
+    const recentlyPlayed = document.querySelector('.recently-played');
+    const isGroup = recentlyPlayed.querySelector('.icon.RecentlyPlayedWidget__playing-icon.spoticon-volume-16') !== null;
+    const lastPlayed = JSON.parse(localStorage.getItem('playbackHistory'))[0].name;
+    const isPremium = document.querySelector('.AdsContainer') === null;
+
+    const nowPlayingBar = document.querySelector('div.now-playing-bar');
+
+    const artist = nowPlayingBar.querySelector('.track-info__artists').innerText;
+    const title = nowPlayingBar.querySelector('.track-info__name').innerText;
+    const duration = nowPlayingBar.querySelector('.progress-bar + .playback-bar__progress-time').innerText;
+    const cover = nowPlayingBar.querySelector('.cover-art-image').style.backgroundImage;
+
+    return {
+        artist,
+        title,
+        duration: durationToMs(duration),
+        cover: cover.substring('url("'.length, cover.length - '")'.length),
+        isPremium,
+        kbps: isPremium ? 256 : 128,
+        directory: isGroup ? lastPlayed : undefined,
+        progress: 0,
+        startTime: Date.now()
+    };
+}
 
 // parses duration to ms
 function durationToMs(duration) {

@@ -99,15 +99,20 @@ const startCapture = () => new Promise((resolve, reject) => {
                             chrome.storage.local.set({'track': data.track});
                             mediaRecorder.startRecording();
                             break;
+                        case 'spotifyUpdateTrack':
+                            chrome.storage.local.set({'track': data.track});
+                            break;
                         case 'spotifyEnded':
-                            // used to skip ads
-                            if (!data.track.isPremium && data.track.duration <= 30) {
-                                console.log('track is shorter than or equal to 30 seconds, user has no premium, discarding track');
-                                mediaRecorder.cancelRecording();
-                                break;
-                            }
+                            chrome.storage.local.get(['track'], ({track}) => {
+                                // used to skip ads
+                                if (track.type === 'ad') {
+                                    console.log('track is shorter than or equal to 30 seconds, user has no premium, discarding track');
+                                    mediaRecorder.cancelRecording();
+                                    return;
+                                }
 
-                            mediaRecorder.finishRecording(data.track);
+                                mediaRecorder.finishRecording(track);
+                            });
                             break;
                         case 'spotifyAbort':
                             mediaRecorder.cancelRecording();
