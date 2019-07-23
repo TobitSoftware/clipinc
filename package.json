@@ -1,7 +1,7 @@
 {
-  "name": "spotify-recorder-extension",
+  "name": "clipinc",
   "version": "1.0.0",
-  "description": "clipinc chrome browser extension",
+  "description": "clipinc chrome browser extension to record spotify songs",
   "main": "src/manifest.json",
   "scripts": {
     "build": "gulp",
@@ -9,10 +9,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://gitlab.tobit.com/LEngelke/spotify-recorder-extension.git"
+    "url": "https://github.com/TobitSoftware/clipinc"
   },
   "author": "Lucas Engelke",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "babel-core": "^6.26.3",
     "babel-preset-env": "^1.7.0",
