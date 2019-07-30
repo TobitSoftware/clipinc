@@ -2,10 +2,10 @@ let trackTimeout;
 
 // handle player play event
 function handlePlayerPlay() {
-    chrome.runtime.sendMessage({command: 'spotifyPlay', data: {track: getLocalTrackInfo()}});
+    chrome.runtime.sendMessage({ command: 'spotifyPlay', data: { track: getLocalTrackInfo() } });
     trackTimeout = setTimeout(() => {
         getTrackInfo().then((track) => {
-            chrome.runtime.sendMessage({command: 'spotifyUpdateTrack', data: {track}});
+            chrome.runtime.sendMessage({ command: 'spotifyUpdateTrack', data: { track } });
         });
     }, 1000);
 }
@@ -13,34 +13,32 @@ function handlePlayerPlay() {
 // handle player ended event
 function handlePlayerEnded() {
     clearTimeout(trackTimeout);
-    chrome.runtime.sendMessage({command: 'spotifyEnded', data: {}});
+    chrome.runtime.sendMessage({ command: 'spotifyEnded', data: {} });
 }
 
 // handle player abort event
 function handlePlayerAbort() {
     clearTimeout(trackTimeout);
-    chrome.runtime.sendMessage({command: 'spotifyAbort', data: {}});
+    chrome.runtime.sendMessage({ command: 'spotifyAbort', data: {} });
 }
 
 // handle player pause event
 function handlePlayerPause() {
-    chrome.runtime.sendMessage({command: 'spotifyPause', data: {}});
+    chrome.runtime.sendMessage({ command: 'spotifyPause', data: {} });
 }
 
 // handle player pause event
 function handlePlayerSeek() {
-    chrome.runtime.sendMessage({command: 'spotifySeeking', data: {}});
+    chrome.runtime.sendMessage({ command: 'spotifySeeking', data: {} });
 }
 
 // handle player volume change event
 function handlePlayerVolumeInput(event) {
-    chrome.runtime.sendMessage({command: 'setVolume', data: {volume: parseFloat(event.target.value)}});
+    chrome.runtime.sendMessage({ command: 'setVolume', data: { volume: parseFloat(event.target.value) } });
 }
 
 // get track info from dom
 const getTrackInfo = () => new Promise((resolve) => {
-    const recentlyPlayed = document.querySelector('.recently-played');
-    const isGroup = recentlyPlayed.querySelector('.icon.RecentlyPlayedWidget__playing-icon.spoticon-volume-16') !== null;
     const lastPlayed = JSON.parse(localStorage.getItem('playbackHistory'))[0].name;
     const isPremium = document.querySelector('.AdsContainer') === null;
 
@@ -71,7 +69,7 @@ const getTrackInfo = () => new Promise((resolve) => {
                 albumReleaseYear: parseInt(track.album.release_date.substring(0, 4), 10),
                 isPremium,
                 kbps: isPremium ? 256 : 128,
-                directory: isGroup ? lastPlayed : undefined,
+                directory: undefined,
                 progress: t.progress_ms,
                 startTime: new Date()
             });
@@ -83,9 +81,6 @@ const getTrackInfo = () => new Promise((resolve) => {
 });
 
 function getLocalTrackInfo() {
-    const recentlyPlayed = document.querySelector('.recently-played');
-    const isGroup = recentlyPlayed.querySelector('.icon.RecentlyPlayedWidget__playing-icon.spoticon-volume-16') !== null;
-    const lastPlayed = JSON.parse(localStorage.getItem('playbackHistory'))[0].name;
     const isPremium = document.querySelector('.AdsContainer') === null;
 
     const nowPlayingBar = document.querySelector('div.now-playing-bar');
@@ -102,7 +97,7 @@ function getLocalTrackInfo() {
         cover: cover.substring('url("'.length, cover.length - '")'.length),
         isPremium,
         kbps: isPremium ? 256 : 128,
-        directory: isGroup ? lastPlayed : undefined,
+        directory: undefined,
         progress: 0,
         startTime: Date.now()
     };
@@ -146,7 +141,7 @@ function getVolume() {
 // set volume
 function setVolume(volume) {
     const e = new CustomEvent('setvolume', {
-        detail: {volume}
+        detail: { volume }
     });
     document.dispatchEvent(e)
 }
@@ -185,7 +180,7 @@ function releaseVolumeControl() {
     document.querySelector('.volume-bar').style.display = '';
 }
 
-chrome.runtime.onMessage.addListener(({command, data}, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener(({ command, data }, sender, sendResponse) => {
     switch (command) {
         case 'prepareRecording':
             const isReady = document.querySelector('body.clipinc-ready') !== null;
@@ -203,7 +198,7 @@ chrome.runtime.onMessage.addListener(({command, data}, sender, sendResponse) => 
                 setVolume(1);
             }
 
-            sendResponse({volume: oldVolume, error});
+            sendResponse({ volume: oldVolume, error });
             break;
         case 'startRecording':
             skipBack();
@@ -270,7 +265,7 @@ function hijackPlayer() {
 
         //event listener to increase volume for first track
         document.addEventListener('initplayer', () => {
-            chrome.storage.local.get('isRecording', ({isRecording}) => {
+            chrome.storage.local.get('isRecording', ({ isRecording }) => {
                 if (isRecording) {
                     setVolume(1);
                 }
@@ -278,7 +273,7 @@ function hijackPlayer() {
         });
 
         // if player is already recording, hijack volume control immediately
-        chrome.storage.local.get('isRecording', ({isRecording}) => {
+        chrome.storage.local.get('isRecording', ({ isRecording }) => {
             if (isRecording) {
                 hijackVolumeControl();
                 play();
