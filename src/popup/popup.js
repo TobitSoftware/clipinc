@@ -1,5 +1,4 @@
 chrome.runtime.onMessage.addListener(({command, data}) => {
-    console.log('popup.js', command, data);
     switch (command) {
         case 'spotifyPlay':
             updateTrack(data.track);
