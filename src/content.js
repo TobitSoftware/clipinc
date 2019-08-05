@@ -37,9 +37,21 @@ function handlePlayerVolumeInput(event) {
     chrome.runtime.sendMessage({ command: 'setVolume', data: { volume: parseFloat(event.target.value) } });
 }
 
+/**
+ * Checks if the current playing Track is in a Playlist
+ * @returns {boolean}
+ */
+function isTrackInPlayList() {
+    const playButton = document.querySelector('.RootlistItemPlaylist__play-button');
+    return !!playButton;
+}
+
 // get track info from dom
 const getTrackInfo = () => new Promise((resolve) => {
     const lastPlayed = JSON.parse(localStorage.getItem('playbackHistory'))[0].name;
+    const isPlaylistTrack = isTrackInPlayList();
+    console.log('isPlaylistTrack', isPlaylistTrack);
+    console.log('lastPlayed', lastPlayed);
     const isPremium = document.querySelector('.AdsContainer') === null;
 
     fetch('https://api.spotify.com/v1/me/player', {
@@ -69,7 +81,7 @@ const getTrackInfo = () => new Promise((resolve) => {
                 albumReleaseYear: parseInt(track.album.release_date.substring(0, 4), 10),
                 isPremium,
                 kbps: isPremium ? 256 : 128,
-                directory: undefined,
+                directory: isPlaylistTrack ? lastPlayed : undefined,
                 progress: t.progress_ms,
                 startTime: new Date()
             });
@@ -81,6 +93,12 @@ const getTrackInfo = () => new Promise((resolve) => {
 });
 
 function getLocalTrackInfo() {
+    console.log('getLocatlTrackInfo');
+    //const recentlyPlayed = document.querySelector('.recently-played');
+    //const isGroup = recentlyPlayed.querySelector('.icon.RecentlyPlayedWidget__playing-icon.spoticon-volume-16') !== null;
+    const isPlaylistTrack = isTrackInPlayList();
+    const lastPlayed = JSON.parse(localStorage.getItem('playbackHistory'))[0].name;
+    console.log('getLocalTrackInfo lastPlayed', lastPlayed);
     const isPremium = document.querySelector('.AdsContainer') === null;
 
     const nowPlayingBar = document.querySelector('div.now-playing-bar');
@@ -90,6 +108,25 @@ function getLocalTrackInfo() {
     const duration = nowPlayingBar.querySelector('.progress-bar + .playback-bar__progress-time').innerText;
     const cover = nowPlayingBar.querySelector('.cover-art-image').style.backgroundImage;
 
+    /*
+    const playButton = document.querySelector('.RootlistItemPlaylist__play-button');
+    if (playButton) {
+        console.log('playButton', playButton);
+        const playButtonPreviousSibling = playButton.previousElementSibling;
+        console.log('playButtonPrevoiusSibling', playButtonPreviousSibling);
+        isGroup = true;
+        if (playButtonPreviousSibling) {
+            const playListNameWrapper = playButtonPreviousSibling.querySelector('.RootlistItemPlaylist__text-wrapper');
+            console.log('playListNameWrapper', playListNameWrapper);
+            const playListName = playListNameWrapper.innerText;
+
+            if (playListName) {
+                console.log('playListName', playListName);
+            }
+        }
+
+    }
+*/
     return {
         artist,
         title,
@@ -97,7 +134,7 @@ function getLocalTrackInfo() {
         cover: cover.substring('url("'.length, cover.length - '")'.length),
         isPremium,
         kbps: isPremium ? 256 : 128,
-        directory: undefined,
+        directory: isPlaylistTrack ? lastPlayed : undefined,
         progress: 0,
         startTime: Date.now()
     };
