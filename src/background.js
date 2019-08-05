@@ -9,8 +9,6 @@ chrome.tabs.onRemoved.addListener(handleTabRemove);
 chrome.windows.onRemoved.addListener(handleWindowRemove);
 
 chrome.runtime.onMessage.addListener(({command, data}, sender, sendResponse) => {
-    console.log('background.js: ', command, data);
-
     switch (command) {
         case 'startCapture':
             startCapture()
@@ -89,8 +87,6 @@ const startCapture = () => new Promise((resolve, reject) => {
                 };
 
                 const mediaListener = ({command, data}) => {
-                    console.log('background.js', "mediaListener", command, data);
-
                     switch (command) {
                         case 'setVolume':
                             audio.volume = data.volume;
