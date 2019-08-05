@@ -37,9 +37,72 @@ function handlePlayerVolumeInput(event) {
     chrome.runtime.sendMessage({ command: 'setVolume', data: { volume: parseFloat(event.target.value) } });
 }
 
+/**
+ * Checks if current playing Track is in an Album
+ * @returns {boolean}
+ */
+function isAlbumTrack() {
+    const playIcon = document.querySelector('.cover-art-playback playing');
+
+    return false;
+}
+
+/**
+ * Searches in the DOM for the album name
+ * @returns {string}
+ */
+function getAlbumName() {
+    let name = '';
+
+    const nameWrapper = document.querySelector('.mo-info-name');
+
+    if (nameWrapper) {
+        return nameWrapper.innerText;
+    }
+
+    return name;
+}
+
+/**
+ * Searches in the DOM for the playlist name
+ * @returns {string}
+ */
+
+function getPlayListName() {
+    let playListName = '';
+    const playButton = document.querySelector('.RootlistItemPlaylist__play-button');
+
+    if (playButton) {
+        const playButtonPreviousSibling = playButton.previousElementSibling;
+        if (playButtonPreviousSibling) {
+            const playListNameWrapper = playButtonPreviousSibling.querySelector('.RootlistItemPlaylist__text-wrapper');
+            playListName = playListNameWrapper.innerText;
+        }
+
+    }
+    return playListName;
+}
+
+/**
+ * Checks if the current playing Track is in a Playlist
+ * @returns {boolean}
+ */
+function isTrackInPlayList() {
+    const playButton = document.querySelector('.RootlistItemPlaylist__play-button');
+    return !!playButton;
+}
+
 // get track info from dom
 const getTrackInfo = () => new Promise((resolve) => {
+    let directoryName = '';
     const lastPlayed = JSON.parse(localStorage.getItem('playbackHistory'))[0].name;
+    const isPlaylistTrack = isTrackInPlayList();
+
+    if (!isPlaylistTrack) {
+        directoryName = getAlbumName();
+    } else {
+        directoryName = getPlayListName();
+    }
     const isPremium = document.querySelector('.AdsContainer') === null;
 
     fetch('https://api.spotify.com/v1/me/player', {
@@ -69,7 +132,7 @@ const getTrackInfo = () => new Promise((resolve) => {
                 albumReleaseYear: parseInt(track.album.release_date.substring(0, 4), 10),
                 isPremium,
                 kbps: isPremium ? 256 : 128,
-                directory: undefined,
+                directory: directoryName !== '' ? directoryName : undefined,
                 progress: t.progress_ms,
                 startTime: new Date()
             });
@@ -81,6 +144,16 @@ const getTrackInfo = () => new Promise((resolve) => {
 });
 
 function getLocalTrackInfo() {
+    let directoryName = '';
+
+    const isPlaylistTrack = isTrackInPlayList();
+
+    if (!isPlaylistTrack) {
+        directoryName = getAlbumName();
+    } else {
+        directoryName = getPlayListName();
+    }
+    const lastPlayed = JSON.parse(localStorage.getItem('playbackHistory'))[0].name;
     const isPremium = document.querySelector('.AdsContainer') === null;
 
     const nowPlayingBar = document.querySelector('div.now-playing-bar');
@@ -97,7 +170,7 @@ function getLocalTrackInfo() {
         cover: cover.substring('url("'.length, cover.length - '")'.length),
         isPremium,
         kbps: isPremium ? 256 : 128,
-        directory: undefined,
+        directory: directoryName !== '' ? directoryName : undefined,
         progress: 0,
         startTime: Date.now()
     };
@@ -220,7 +293,6 @@ chrome.runtime.onMessage.addListener(({ command, data }, sender, sendResponse) =
 function play() {
     const el = document.querySelector('.control-button.spoticon-play-16');
     if (el) {
-        console.log("play");
         el.click();
         return true;
     }
@@ -231,7 +303,6 @@ function play() {
 function pause() {
     const el = document.querySelector('.control-button.spoticon-pause-16');
     if (el) {
-        console.log("pause");
         el.click();
         return true;
     }
@@ -242,7 +313,6 @@ function pause() {
 function skipBack() {
     const el = document.querySelector('.control-button.spoticon-skip-back-16');
     if (el) {
-        console.log("skipBack");
         el.click();
         return true;
     }
