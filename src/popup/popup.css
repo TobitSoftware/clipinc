@@ -1,7 +1,7 @@
 body {
     color: #fff;
     font-family: 'Roboto', sans-serif;
-    margin: 0 2px;
+    margin: 0;
     font-size: 16px;
 }
 
@@ -116,8 +116,8 @@ body {
 }
 
 .intro {
-    width: 210px;
-    padding: 16px 32px;
+    width: 400px;
+    padding: 40px 32px;
     background-color: #282828;
     display: flex;
     align-items: center;
@@ -125,9 +125,25 @@ body {
     user-select: none;
 }
 
+
 .intro .text {
     margin-bottom: 16px;
     text-align: center;
+    color: #989898;
+    width: 55%;
+}
+
+.open-source-text {
+    background-color: black;
+    width: 100%;
+    padding: 15px 20px;
+    font-size: 15px;
+    color: #989898;
+    line-height: 20px;
+    font-weight: bold;
+}
+
+a:visited {
     color: #989898;
 }
 
