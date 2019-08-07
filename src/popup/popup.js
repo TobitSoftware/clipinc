@@ -98,9 +98,12 @@ chrome.storage.local.get(['isRecording', 'track', 'songCount'], ({isRecording, t
     chrome.tabs.query({'active': true, 'currentWindow': true}, (tabs) => {
         if (!isRecording && tabs[0].url.indexOf('https://open.spotify.com') === -1) {
             document.querySelector('.intro').classList.remove('hidden');
+            document.querySelector('.open-source-text').classList.remove('hidden');
+
             document.querySelector('.wrapper').classList.add('hidden');
         } else {
             document.querySelector('.intro').classList.add('hidden');
+            document.querySelector('.open-source-text').classList.add('hidden');
             document.querySelector('.wrapper').classList.remove('hidden');
         }
     });
