@@ -105,42 +105,46 @@ const getTrackInfo = () => new Promise((resolve) => {
     }
     const isPremium = document.querySelector('.AdsContainer') === null;
 
-    fetch('https://api.spotify.com/v1/me/player', {
-        headers: {
-            'Authorization': `Bearer ${getAccessToken()}`
+    fetch('https://open.spotify.com/access_token?reason=transport&productType=web_player').then((data) => data.json()).then(json => {
+        if (json.accessToken && json.accessToken !== '') {
+            fetch('https://api.spotify.com/v1/me/player', {
+                headers: {
+                    'Authorization': `Bearer ${json.accessToken}`
+                }
+            }).then(res => res.json())
+                .then((t) => {
+                    if (t.currently_playing_type === 'ad') {
+                        const track = getLocalTrackInfo();
+                        track.type = 'ad';
+                        resolve(track);
+                        return;
+                    }
+
+                    const track = t.item;
+
+                    resolve({
+                        title: track.name,
+                        artist: track.artists.reduce((acc, a) => acc + (acc ? ', ' : '') + a.name, ''),
+                        duration: track.duration_ms,
+                        cover: track.album.images ? track.album.images[0].url : undefined,
+                        album: track.album.name,
+                        discNumber: track.disc_number,
+                        trackNumber: track.track_number,
+                        albumArtist: track.album.artists.reduce((acc, a) => acc + (acc ? ', ' : '') + a.name, ''),
+                        albumReleaseYear: parseInt(track.album.release_date.substring(0, 4), 10),
+                        isPremium,
+                        kbps: isPremium ? 256 : 128,
+                        directory: directoryName !== '' ? directoryName : undefined,
+                        progress: t.progress_ms,
+                        startTime: new Date()
+                    });
+                })
+                .catch((err) => {
+                    console.error('clipinc: could not retrieve remote track info', err);
+                    resolve(getLocalTrackInfo());
+                });
         }
-    }).then(res => res.json())
-        .then((t) => {
-            if (t.currently_playing_type === 'ad') {
-                const track = getLocalTrackInfo();
-                track.type = 'ad';
-                resolve(track);
-                return;
-            }
-
-            const track = t.item;
-
-            resolve({
-                title: track.name,
-                artist: track.artists.reduce((acc, a) => acc + (acc ? ', ' : '') + a.name, ''),
-                duration: track.duration_ms,
-                cover: track.album.images ? track.album.images[0].url : undefined,
-                album: track.album.name,
-                discNumber: track.disc_number,
-                trackNumber: track.track_number,
-                albumArtist: track.album.artists.reduce((acc, a) => acc + (acc ? ', ' : '') + a.name, ''),
-                albumReleaseYear: parseInt(track.album.release_date.substring(0, 4), 10),
-                isPremium,
-                kbps: isPremium ? 256 : 128,
-                directory: directoryName !== '' ? directoryName : undefined,
-                progress: t.progress_ms,
-                startTime: new Date()
-            });
-        })
-        .catch((err) => {
-            console.error('clipinc: could not retrieve remote track info', err);
-            resolve(getLocalTrackInfo());
-        });
+    });
 });
 
 function getLocalTrackInfo() {
@@ -185,7 +189,6 @@ function durationToMs(duration) {
 // retrieves a field from the cookies
 function getCookie(key) {
     const cookies = document.cookie.split('; ');
-
     for (let i = 0, l = cookies.length; i < l; i++) {
         const c = cookies[i].split('=');
         if (c[0] === key) {
