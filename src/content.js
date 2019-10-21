@@ -157,7 +157,6 @@ function getLocalTrackInfo() {
     } else {
         directoryName = getPlayListName();
     }
-    const lastPlayed = JSON.parse(localStorage.getItem('playbackHistory'))[0].name;
     const isPremium = document.querySelector('.AdsContainer') === null;
 
     const nowPlayingBar = document.querySelector('div.now-playing-bar');
