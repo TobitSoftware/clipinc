@@ -11,7 +11,7 @@
     "type": "git",
     "url": "https://github.com/TobitSoftware/clipinc"
   },
-  "author": "Lucas Engelke",
+  "author": "Tobit Software",
   "license": "MIT",
   "devDependencies": {
     "babel-core": "^6.26.3",
