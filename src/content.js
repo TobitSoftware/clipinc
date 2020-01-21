@@ -95,7 +95,6 @@ function isTrackInPlayList() {
 // get track info from dom
 const getTrackInfo = () => new Promise((resolve) => {
     let directoryName = '';
-    const lastPlayed = JSON.parse(localStorage.getItem('playbackHistory'))[0].name;
     const isPlaylistTrack = isTrackInPlayList();
 
     if (!isPlaylistTrack) {

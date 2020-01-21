@@ -37,7 +37,7 @@ class Recorder {
             for (let ch = 0; ch < OPTIONS.numChannels; ++ch) {
                 buffer[ch] = event.inputBuffer.getChannelData(ch);
             }
-            worker.postMessage({command: 'record', buffer: buffer});
+            worker.postMessage({ command: 'record', buffer: buffer });
         };
 
         this.worker.postMessage({
@@ -53,7 +53,7 @@ class Recorder {
         this.input.disconnect();
         this.processor.disconnect();
         delete this.processor;
-        this.worker.postMessage({command: 'cancel'});
+        this.worker.postMessage({ command: 'cancel' });
     }
 
     finishRecording(track) {
@@ -64,7 +64,7 @@ class Recorder {
         this.input.disconnect();
         this.processor.disconnect();
         delete this.processor;
-        this.worker.postMessage({command: 'finish', track});
+        this.worker.postMessage({ command: 'finish', track });
     }
 
     initWorker() {
@@ -98,9 +98,12 @@ class Recorder {
         });
     }
 
-    onEncodingProgress(recorder, progress) {}
+    onEncodingProgress(recorder, progress) {
+    }
 
-    onComplete(recorder, blob) {}
+    onComplete(recorder, blob) {
+    }
 
-    onError(recorder, error) {}
+    onError(recorder, error) {
+    }
 }
