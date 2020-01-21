@@ -8,14 +8,14 @@ chrome.runtime.onStartup.addListener(resetStorage);
 chrome.tabs.onRemoved.addListener(handleTabRemove);
 chrome.windows.onRemoved.addListener(handleWindowRemove);
 
-chrome.runtime.onMessage.addListener(({command, data}, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener(({ command, data }, sender, sendResponse) => {
     switch (command) {
         case 'startCapture':
             startCapture()
                 .then(() => {
-                    sendResponse({success: true});
+                    sendResponse({ success: true });
                 }, () => {
-                    sendResponse({success: false});
+                    sendResponse({ success: false });
                 });
             break;
     }
@@ -25,10 +25,10 @@ chrome.runtime.onMessage.addListener(({command, data}, sender, sendResponse) => 
 
 // start tab capturing
 const startCapture = () => new Promise((resolve, reject) => {
-    chrome.tabs.query({'active': true, 'currentWindow': true}, (tabs) => {
+    chrome.tabs.query({ 'active': true, 'currentWindow': true }, (tabs) => {
         const tab = tabs[0];
 
-        chrome.tabs.sendMessage(tab.id, {command: 'prepareRecording'}, {}, (response) => {
+        chrome.tabs.sendMessage(tab.id, { command: 'prepareRecording' }, {}, (response) => {
             if (response && response.error) {
                 chrome.notifications.create('clipincError', {
                     type: 'basic',
@@ -43,7 +43,7 @@ const startCapture = () => new Promise((resolve, reject) => {
                 return;
             }
 
-            chrome.tabCapture.capture({audio: true}, (stream) => {
+            chrome.tabCapture.capture({ audio: true }, (stream) => {
                 if (chrome.runtime.lastError || !stream) {
                     console.error(chrome.runtime.lastError || 'No stream found');
                     reject();
@@ -76,7 +76,7 @@ const startCapture = () => new Promise((resolve, reject) => {
                     stream.getAudioTracks()[0].stop();
 
                     reset();
-                    chrome.tabs.sendMessage(tab.id, {command: 'stopRecording', data: {volume: audio.volume}});
+                    chrome.tabs.sendMessage(tab.id, { command: 'stopRecording', data: { volume: audio.volume } });
 
                     chrome.notifications.create('clipincStop', {
                         type: 'basic',
@@ -86,23 +86,22 @@ const startCapture = () => new Promise((resolve, reject) => {
                     }, console.debug.bind(console));
                 };
 
-                const mediaListener = ({command, data}) => {
+                const mediaListener = ({ command, data }) => {
                     switch (command) {
                         case 'setVolume':
                             audio.volume = data.volume;
                             break;
                         case 'spotifyPlay':
-                            chrome.storage.local.set({'track': data.track});
+                            chrome.storage.local.set({ 'track': data.track });
                             mediaRecorder.startRecording();
                             break;
                         case 'spotifyUpdateTrack':
-                            chrome.storage.local.set({'track': data.track});
+                            chrome.storage.local.set({ 'track': data.track });
                             break;
                         case 'spotifyEnded':
-                            chrome.storage.local.get(['track'], ({track}) => {
+                            chrome.storage.local.get(['track'], ({ track }) => {
                                 // used to skip ads
                                 if (track.type === 'ad') {
-                                    console.log('track is shorter than or equal to 30 seconds, user has no premium, discarding track');
                                     mediaRecorder.cancelRecording();
                                     return;
                                 }
@@ -121,7 +120,7 @@ const startCapture = () => new Promise((resolve, reject) => {
                 };
 
                 const updateListener = (id, changeInfo) => {
-                    chrome.storage.local.get(['tabId'], ({tabId}) => {
+                    chrome.storage.local.get(['tabId'], ({ tabId }) => {
                         if (tabId === id && changeInfo.status === 'loading') {
                             stopRecording();
                         }
@@ -130,9 +129,9 @@ const startCapture = () => new Promise((resolve, reject) => {
 
                 chrome.runtime.onMessage.addListener(mediaListener);
                 chrome.tabs.onUpdated.addListener(updateListener);
-                chrome.tabs.sendMessage(tab.id, {command: 'startRecording'});
+                chrome.tabs.sendMessage(tab.id, { command: 'startRecording' });
 
-                chrome.storage.local.set({isRecording: true, tabId: tab.id, songCount: 0});
+                chrome.storage.local.set({ isRecording: true, tabId: tab.id, songCount: 0 });
                 setRecordingIcon();
                 resolve();
             });
@@ -142,7 +141,7 @@ const startCapture = () => new Promise((resolve, reject) => {
 
 // delete storage if the tab that was recorded is closed
 function handleTabRemove(id) {
-    chrome.storage.local.get(['tabId'], ({tabId}) => {
+    chrome.storage.local.get(['tabId'], ({ tabId }) => {
         if (tabId && id === tabId) {
             reset();
         }
@@ -151,7 +150,7 @@ function handleTabRemove(id) {
 
 // delete storage if the window that was recording was closed
 function handleWindowRemove() {
-    chrome.storage.local.get(['tabId'], ({tabId}) => {
+    chrome.storage.local.get(['tabId'], ({ tabId }) => {
         chrome.tabs.get(tabId, (tab) => {
             if (tab !== 0 && (chrome.runtime.lastError || !tab)) {
                 reset();
@@ -162,30 +161,36 @@ function handleWindowRemove() {
 
 // clear storage
 function resetStorage() {
-    chrome.storage.local.set({isRecording: false, tabId: 0, track: null, soungCount: 0});
+    chrome.storage.local.set({ isRecording: false, tabId: 0, track: null, soungCount: 0 });
 }
 
 // download file
 function download(recorder, track) {
     chrome.downloads.onChanged.addListener(cleanDownloadShelf);
 
-    const regex = /[\\/:*?"<>|.]/g;
+    const regex = /[^a-zA-Z0-9]/g;
     let filename = `clipinc`;
 
+    console.debug('track', track);
+
+
     if (track.directory) {
-        filename = `${filename}/${track.directory.replace(regex, ' ').trim()}`;
+        filename = `${filename}/${track.directory ? track.directory.replace(regex, ' ').trim() : ''}`;
     }
 
-    const title = track.title.replace(regex, ' ').trim();
-    const artist = track.artist.replace(regex, ' ').trim();
+    const title = track.title ? track.title.replace(regex, ' ').trim() : '';
+    const artist = track.artist ? track.artist.replace(regex, ' ').trim(): '';
 
     filename = `${filename}/${artist} - ${title}.mp3`;
-    chrome.downloads.download({url: track.url, filename, conflictAction: 'overwrite'});
+    console.debug('filename', filename);
 
-    chrome.storage.local.get(['songCount'], ({songCount}) => {
+    //filename = `test.mp3`;
+    chrome.downloads.download({ url: track.url, filename, conflictAction: 'overwrite' });
+
+    chrome.storage.local.get(['songCount'], ({ songCount }) => {
         songCount++;
-        chrome.storage.local.set({songCount});
-        chrome.runtime.sendMessage(undefined, {command: 'downloaded', data: {songCount}});
+        chrome.storage.local.set({ songCount });
+        chrome.runtime.sendMessage(undefined, { command: 'downloaded', data: { songCount } });
     });
 
     let message = chrome.i18n.getMessage('notificationDownloaded');
@@ -206,12 +211,12 @@ function cleanDownloadShelf(delta) {
         return;
     }
 
-    chrome.downloads.search({id: delta.id}, (downloads) => {
+    chrome.downloads.search({ id: delta.id }, (downloads) => {
         if (downloads[0].filename.indexOf('clipinc') === -1) {
             return;
         }
 
-        chrome.downloads.erase({id: delta.id});
+        chrome.downloads.erase({ id: delta.id });
         chrome.downloads.onChanged.removeListener(cleanDownloadShelf);
     });
 }

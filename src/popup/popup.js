@@ -13,7 +13,7 @@ chrome.runtime.onMessage.addListener(({command, data}) => {
             break;
         case 'spotifyAbort':
         case 'spotifyPause':
-            stopCapture();
+            //stopCapture();
             break;
         case 'downloaded':
             const songCount = data.songCount;
