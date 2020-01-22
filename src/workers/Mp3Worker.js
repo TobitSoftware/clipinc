@@ -29,13 +29,13 @@ function start() {
 }
 
 function record(buffer) {
-    console.debug('record', bufferCount, buffer);
+    //console.debug('record', bufferCount, buffer);
     bufferCount++;
     recBuffers.push(buffer);
 }
 
 function postProgress(progress) {
-    console.debug('progress', progress);
+   // console.debug('progress', progress);
     self.postMessage({command: 'progress', progress});
 }
 
