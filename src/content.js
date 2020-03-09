@@ -104,7 +104,7 @@ const getTrackInfo = () => new Promise((resolve) => {
     }
     const isPremium = document.querySelector('.AdsContainer') === null;
 
-    fetch('https://open.spotify.com/access_token?reason=transport&productType=web_player').then((data) => data.json()).then(json => {
+    fetch('https://open.spotify.com/get_access_token?reason=transport&productType=web_player').then((data) => data.json()).then(json => {
         if (json.accessToken && json.accessToken !== '') {
             fetch('https://api.spotify.com/v1/me/player', {
                 headers: {
@@ -143,6 +143,8 @@ const getTrackInfo = () => new Promise((resolve) => {
                     resolve(getLocalTrackInfo());
                 });
         }
+    }).catch((ex) => {
+        console.log('ex', ex);
     });
 });
 
@@ -158,24 +160,44 @@ function getLocalTrackInfo() {
     }
     const isPremium = document.querySelector('.AdsContainer') === null;
 
-    const nowPlayingBar = document.querySelector('div.now-playing-bar');
+    try {
+        const nowPlayingBar = document.querySelector('div.now-playing-bar');
+        const nowPlaying =  document.querySelector('div.now-playing');
+        const aTags = nowPlaying.querySelectorAll('a');
 
-    const artist = nowPlayingBar.querySelector('.track-info__artists').innerText;
-    const title = nowPlayingBar.querySelector('.track-info__name').innerText;
-    const duration = nowPlayingBar.querySelector('.progress-bar + .playback-bar__progress-time').innerText;
-    const cover = nowPlayingBar.querySelector('.cover-art-image').style.backgroundImage;
+        //const title = nowPlaying.querySelector("[data-testid=nowplaying-track-link]").innerText;
+        //const artist = nowPlayingBar.querySelector('.track-info__artists').innerText;
+        //const title = nowPlayingBar.querySelector('.track-info__name').innerText;
 
-    return {
-        artist,
-        title,
-        duration: durationToMs(duration),
-        cover: cover.substring('url("'.length, cover.length - '")'.length),
-        isPremium,
-        kbps: isPremium ? 256 : 128,
-        directory: directoryName !== '' ? directoryName : undefined,
-        progress: 0,
-        startTime: Date.now()
-    };
+        const title = aTags[1]?.innerText || '';
+        const artist = aTags[2]?.innerText || '';
+
+        const duration = nowPlayingBar.querySelector('.progress-bar + .playback-bar__progress-time').innerText || 0;
+        const cover = nowPlayingBar.querySelector('.cover-art-image').style.backgroundImage || '';
+
+        return {
+            artist,
+            title,
+            duration: durationToMs(duration),
+            cover: cover.substring('url("'.length, cover.length - '")'.length),
+            isPremium,
+            kbps: isPremium ? 256 : 128,
+            directory: directoryName !== '' ? directoryName : undefined,
+            progress: 0,
+            startTime: Date.now()
+        };
+    }catch(ex) {
+        return {
+            artist: '',
+            title: '',
+            cover:'',
+            isPremium,
+            kbps: isPremium ? 256 : 128,
+            directory: directoryName !== '' ? directoryName : undefined,
+            progress: 0,
+            startTime: Date.now()
+        };
+    }
 }
 
 // parses duration to ms
