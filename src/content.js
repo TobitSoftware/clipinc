@@ -168,8 +168,8 @@ function getLocalTrackInfo() {
     //const artist = nowPlayingBar.querySelector('.track-info__artists').innerText;
     //const title = nowPlayingBar.querySelector('.track-info__name').innerText;
 
-    const title = aTags[1]?.innerText || '';
-    const artist = aTags[2]?.innerText || '';
+    const title = aTags[1].innerText || '';
+    const artist = aTags[2].innerText || '';
 
     const duration = nowPlayingBar.querySelector('.progress-bar + .playback-bar__progress-time').innerText || 0;
     const cover = nowPlayingBar.querySelector('.cover-art-image').style.backgroundImage || '';
