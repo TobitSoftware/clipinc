@@ -36,6 +36,7 @@ const $body = document.querySelector('.body');
 const $recordLabel = document.querySelector('.record-label');
 const $songCount = document.querySelector('.song-count');
 const $switch = document.querySelector('#record');
+
 $switch.addEventListener('input', (event) => {
     $switch.setAttribute('disabled', 'true');
 

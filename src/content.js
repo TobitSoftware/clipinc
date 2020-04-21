@@ -2,7 +2,8 @@ let trackTimeout;
 
 // handle player play event
 function handlePlayerPlay() {
-    chrome.runtime.sendMessage({ command: 'spotifyPlay', data: { track: getLocalTrackInfo() } });
+    chrome.runtime.sendMessage({ command: 'spotifyPlay', data: { track: getLocalTrackInfo() } }, (response) => {
+    });
     trackTimeout = setTimeout(() => {
         getTrackInfo().then((track) => {
             chrome.runtime.sendMessage({ command: 'spotifyUpdateTrack', data: { track } });
@@ -13,18 +14,21 @@ function handlePlayerPlay() {
 // handle player ended event
 function handlePlayerEnded() {
     clearTimeout(trackTimeout);
-    chrome.runtime.sendMessage({ command: 'spotifyEnded', data: {} });
+    chrome.runtime.sendMessage({ command: 'spotifyEnded', data: {} }, (response) => {
+    });
 }
 
 // handle player abort event
 function handlePlayerAbort() {
     clearTimeout(trackTimeout);
-    chrome.runtime.sendMessage({ command: 'spotifyAbort', data: {} });
+    chrome.runtime.sendMessage({ command: 'spotifyAbort', data: {} }), (response) => {
+    };
 }
 
 // handle player pause event
 function handlePlayerPause() {
-    chrome.runtime.sendMessage({ command: 'spotifyPause', data: {} });
+    chrome.runtime.sendMessage({ command: 'spotifyPause', data: {} }, (response) => {
+    });
 }
 
 // handle player pause event

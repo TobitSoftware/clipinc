@@ -27,115 +27,119 @@ chrome.runtime.onMessage.addListener(({ command, data }, sender, sendResponse) =
 const startCapture = () => new Promise((resolve, reject) => {
     chrome.tabs.query({ 'active': true, 'currentWindow': true }, (tabs) => {
         const tab = tabs[0];
+        try {
+            chrome.tabs.sendMessage(tab.id, { command: 'prepareRecording' }, {}, (response) => {
+                if (response && response.error) {
+                    chrome.notifications.create('clipincError', {
+                        type: 'basic',
+                        title: chrome.i18n.getMessage('name'),
+                        message: chrome.i18n.getMessage('errorChangeDevice'),
+                        iconUrl: 'images/clipinc-128.png'
+                    }, console.debug.bind(console));
 
-        chrome.tabs.sendMessage(tab.id, { command: 'prepareRecording' }, {}, (response) => {
-            if (response && response.error) {
-                chrome.notifications.create('clipincError', {
-                    type: 'basic',
-                    title: chrome.i18n.getMessage('name'),
-                    message: chrome.i18n.getMessage('errorChangeDevice'),
-                    iconUrl: 'images/clipinc-128.png'
-                }, console.debug.bind(console));
+                    console.error(response.error);
 
-                console.error(response.error);
-
-                reject();
-                return;
-            }
-
-            chrome.tabCapture.capture({ audio: true }, (stream) => {
-                if (chrome.runtime.lastError || !stream) {
-                    console.error(chrome.runtime.lastError || 'No stream found');
                     reject();
                     return;
                 }
 
-                const audioCtx = new AudioContext();
-                const source = audioCtx.createMediaStreamSource(stream);
+                chrome.tabCapture.capture({ audio: true }, (stream) => {
+                    if (chrome.runtime.lastError || !stream) {
+                        console.error(chrome.runtime.lastError || 'No stream found');
+                        reject();
+                        return;
+                    }
 
-                const mediaRecorder = new Recorder(source);
-                mediaRecorder.onComplete = download;
+                    const audioCtx = new AudioContext();
+                    const source = audioCtx.createMediaStreamSource(stream);
 
-                //restore audio for user
-                const audio = new Audio();
-                audio.srcObject = stream;
-                audio.volume = response.volume;
-                audio.play();
+                    const mediaRecorder = new Recorder(source);
+                    mediaRecorder.onComplete = download;
 
-                //140e1f61f387e586101ab77f507a5e3df2d7d46f
+                    //restore audio for user
+                    const audio = new Audio();
+                    audio.srcObject = stream;
+                    audio.volume = response.volume;
+                    audio.play();
 
-                const stopRecording = () => {
-                    chrome.runtime.onMessage.removeListener(mediaListener);
-                    chrome.tabs.onUpdated.removeListener(updateListener);
+                    //140e1f61f387e586101ab77f507a5e3df2d7d46f
 
-                    mediaRecorder.cancelRecording();
-                    mediaRecorder.onComplete = () => {
+                    const stopRecording = () => {
+                        chrome.runtime.onMessage.removeListener(mediaListener);
+                        chrome.tabs.onUpdated.removeListener(updateListener);
+
+                        mediaRecorder.cancelRecording();
+                        mediaRecorder.onComplete = () => {
+                        };
+
+                        audioCtx.close();
+                        stream.getAudioTracks()[0].stop();
+
+                        reset();
+                        chrome.tabs.sendMessage(tab.id, { command: 'stopRecording', data: { volume: audio.volume } });
+
+                        chrome.notifications.create('clipincStop', {
+                            type: 'basic',
+                            title: chrome.i18n.getMessage('name'),
+                            message: chrome.i18n.getMessage('notificationStop'),
+                            iconUrl: 'images/clipinc-128.png'
+                        }, console.debug.bind(console));
                     };
 
-                    audioCtx.close();
-                    stream.getAudioTracks()[0].stop();
+                    const mediaListener = ({ command, data }) => {
+                        switch (command) {
+                            case 'setVolume':
+                                audio.volume = data.volume;
+                                break;
+                            case 'spotifyPlay':
+                                chrome.storage.local.set({ 'track': data.track });
+                                mediaRecorder.startRecording();
+                                break;
+                            case 'spotifyUpdateTrack':
+                                chrome.storage.local.set({ 'track': data.track });
+                                break;
+                            case 'spotifyEnded':
+                                chrome.storage.local.get(['track'], ({ track }) => {
+                                    // used to skip ads
+                                    if (track.type === 'ad') {
+                                        mediaRecorder.cancelRecording();
+                                        return;
+                                    }
 
-                    reset();
-                    chrome.tabs.sendMessage(tab.id, { command: 'stopRecording', data: { volume: audio.volume } });
-
-                    chrome.notifications.create('clipincStop', {
-                        type: 'basic',
-                        title: chrome.i18n.getMessage('name'),
-                        message: chrome.i18n.getMessage('notificationStop'),
-                        iconUrl: 'images/clipinc-128.png'
-                    }, console.debug.bind(console));
-                };
-
-                const mediaListener = ({ command, data }) => {
-                    switch (command) {
-                        case 'setVolume':
-                            audio.volume = data.volume;
-                            break;
-                        case 'spotifyPlay':
-                            chrome.storage.local.set({ 'track': data.track });
-                            mediaRecorder.startRecording();
-                            break;
-                        case 'spotifyUpdateTrack':
-                            chrome.storage.local.set({ 'track': data.track });
-                            break;
-                        case 'spotifyEnded':
-                            chrome.storage.local.get(['track'], ({ track }) => {
-                                // used to skip ads
-                                if (track.type === 'ad') {
-                                    mediaRecorder.cancelRecording();
-                                    return;
-                                }
-
-                                mediaRecorder.finishRecording(track);
-                            });
-                            break;
-                        case 'spotifyAbort':
-                            mediaRecorder.cancelRecording();
-                            break;
-                        case 'spotifyPause':
-                        case 'stopCapture':
-                            stopRecording();
-                            break;
-                    }
-                };
-
-                const updateListener = (id, changeInfo) => {
-                    chrome.storage.local.get(['tabId'], ({ tabId }) => {
-                        if (tabId === id && changeInfo.status === 'loading') {
-                            stopRecording();
+                                    mediaRecorder.finishRecording(track);
+                                });
+                                break;
+                            case 'spotifyAbort':
+                                mediaRecorder.cancelRecording();
+                                break;
+                            case 'spotifyPause':
+                            case 'stopCapture':
+                                stopRecording();
+                                break;
                         }
-                    });
-                };
+                    };
 
-                chrome.runtime.onMessage.addListener(mediaListener);
-                chrome.tabs.onUpdated.addListener(updateListener);
-                chrome.tabs.sendMessage(tab.id, { command: 'startRecording' });
+                    const updateListener = (id, changeInfo) => {
+                        chrome.storage.local.get(['tabId'], ({ tabId }) => {
+                            if (tabId === id && changeInfo.status === 'loading') {
+                                stopRecording();
+                            }
+                        });
+                    };
 
-                chrome.storage.local.set({ isRecording: true, tabId: tab.id, songCount: 0 });
-                setRecordingIcon();
-                resolve();
+                    chrome.runtime.onMessage.addListener(mediaListener);
+                    chrome.tabs.onUpdated.addListener(updateListener);
+
+                    chrome.tabs.sendMessage(tab.id, { command: 'startRecording' });
+
+                    chrome.storage.local.set({ isRecording: true, tabId: tab.id, songCount: 0 });
+                    setRecordingIcon();
+                    resolve();
+                });
             });
-        });
+        } catch (ex) {
+            console.log('ex', ex);
+        }
     });
 });
 
@@ -179,7 +183,7 @@ function download(recorder, track) {
     }
 
     const title = track.title ? track.title.replace(regex, ' ').trim() : '';
-    const artist = track.artist ? track.artist.replace(regex, ' ').trim(): '';
+    const artist = track.artist ? track.artist.replace(regex, ' ').trim() : '';
 
     filename = `${filename}/${artist} - ${title}.mp3`;
     console.debug('filename', filename);
