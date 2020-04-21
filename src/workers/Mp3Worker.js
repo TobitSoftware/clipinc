@@ -35,7 +35,7 @@ function record(buffer) {
 }
 
 function postProgress(progress) {
-   // console.debug('progress', progress);
+    //console.debug('progress', progress);
     self.postMessage({command: 'progress', progress});
 }
 
