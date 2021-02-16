@@ -21,7 +21,7 @@
     width: 12px;
     background-color: white;
     border-radius: 100%;
-    transition: width .1s, height .1s, margin-top .1s;
+    transition: width 0.1s, height 0.1s, margin-top 0.1s;
     margin-top: -3px;
 }
 

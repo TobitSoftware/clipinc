@@ -33,7 +33,7 @@ body {
     width: 64px;
     height: 64px;
     margin-right: 24px;
-    border: 3px solid #1DB954;
+    border: 3px solid #1db954;
     border-radius: 100px;
     animation: rotate 6s infinite linear;
     user-select: none;
@@ -97,7 +97,7 @@ body {
 }
 
 .switch:checked + label {
-    background-color: #1DB954;
+    background-color: #1db954;
 }
 
 .switch:disabled + label {
@@ -111,7 +111,7 @@ body {
 }
 
 .progress-bar-track {
-    background-color: #1DB954;
+    background-color: #1db954;
     height: 100%;
 }
 
@@ -124,7 +124,6 @@ body {
     flex-direction: column;
     user-select: none;
 }
-
 
 .intro .text {
     margin-bottom: 16px;
@@ -148,14 +147,14 @@ a:visited {
 }
 
 .intro .button {
-    background-color: #1DB954;
+    background-color: #1db954;
     color: #fff;
     outline: none;
     border: 0;
     border-radius: 2px;
     min-height: 30px;
     padding: 7px 12px;
-    box-shadow: 1px 2px 3px rgba(0, 0, 0, .4);
+    box-shadow: 1px 2px 3px rgba(0, 0, 0, 0.4);
     cursor: pointer;
     transition: background-color 150ms ease;
 }

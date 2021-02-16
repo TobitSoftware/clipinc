@@ -10,7 +10,7 @@ let sampleRate = 44100,
 
 function error(message) {
     console.debug('error');
-    self.postMessage({command: 'error', message: `Mp3Worker: ${message}`});
+    self.postMessage({ command: 'error', message: `Mp3Worker: ${message}` });
 }
 
 function init(data) {
@@ -36,7 +36,7 @@ function record(buffer) {
 
 function postProgress(progress) {
     //console.debug('progress', progress);
-    self.postMessage({command: 'progress', progress});
+    self.postMessage({ command: 'progress', progress });
 }
 
 function finish(track) {
@@ -67,64 +67,64 @@ function finish(track) {
         fileReader.readAsArrayBuffer(blob);
     });
 
-    const imagePromise = fetch(track.cover).then(res => res.arrayBuffer()
-        .then((arrayBuffer) => ({
+    const imagePromise = fetch(track.cover).then((res) =>
+        res.arrayBuffer().then((arrayBuffer) => ({
             arrayBuffer,
-            mimeType: res.headers.get('Content-Type')
+            mimeType: res.headers.get('Content-Type'),
         }))
     );
 
-    Promise.all([filePromise, imagePromise])
-        .then(([file, cover]) => {
-            console.debug('got file and image');
+    Promise.all([filePromise, imagePromise]).then(([file, cover]) => {
+        console.debug('got file and image');
 
-            const writer = new ID3Writer(file);
-            writer.setFrame('TPE1', [track.artist])
-                .setFrame('TIT2', track.title)
-                .setFrame('TLEN', track.duration);
+        const writer = new ID3Writer(file);
+        writer
+            .setFrame('TPE1', [track.artist])
+            .setFrame('TIT2', track.title)
+            .setFrame('TLEN', track.duration);
 
-            if (cover && cover.arrayBuffer && cover.arrayBuffer.byteLength > 0) {
-                writer.setFrame('APIC', {
-                    type: 3,
-                    data: cover.arrayBuffer,
-                    description: '',
-                    mimeType: cover.mimeType
-                });
-            }
-
-            if (track.album) {
-                writer.setFrame('TALB', track.album);
-            }
-
-            if (track.albumArtist) {
-                writer.setFrame('TPE2', track.albumArtist);
-            }
-
-            if (track.albumReleaseDate) {
-                writer.setFrame('TDAT', track.albumReleaseDate);
-            }
-
-            if (track.albumReleaseYear) {
-                writer.setFrame('TYER', track.albumReleaseYear);
-            }
-
-            if (track.discNumber) {
-                writer.setFrame('TPOS', track.discNumber);
-            }
-
-            if (track.trackNumber) {
-                writer.setFrame('TRCK', track.trackNumber);
-            }
-
-            writer.addTag();
-
-            console.debug('done');
-            track.url = writer.getURL();
-            self.postMessage({
-                command: 'complete',
-                track
+        if (cover && cover.arrayBuffer && cover.arrayBuffer.byteLength > 0) {
+            writer.setFrame('APIC', {
+                type: 3,
+                data: cover.arrayBuffer,
+                description: '',
+                mimeType: cover.mimeType,
             });
+        }
+
+        if (track.album) {
+            writer.setFrame('TALB', track.album);
+        }
+
+        if (track.albumArtist) {
+            writer.setFrame('TPE2', track.albumArtist);
+        }
+
+        if (track.albumReleaseDate) {
+            writer.setFrame('TDAT', track.albumReleaseDate);
+        }
+
+        if (track.albumReleaseYear) {
+            writer.setFrame('TYER', track.albumReleaseYear);
+        }
+
+        if (track.discNumber) {
+            writer.setFrame('TPOS', track.discNumber);
+        }
+
+        if (track.trackNumber) {
+            writer.setFrame('TRCK', track.trackNumber);
+        }
+
+        writer.addTag();
+
+        console.debug('done');
+        track.url = writer.getURL();
+        self.postMessage({
+            command: 'complete',
+            track,
         });
+    });
 }
 
 function cleanup() {

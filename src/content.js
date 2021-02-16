@@ -2,11 +2,16 @@ let trackTimeout;
 
 // handle player play event
 function handlePlayerPlay() {
-    chrome.runtime.sendMessage({ command: 'spotifyPlay', data: { track: getLocalTrackInfo() } }, (response) => {
-    });
+    chrome.runtime.sendMessage(
+        { command: 'spotifyPlay', data: { track: getLocalTrackInfo() } },
+        (response) => {}
+    );
     trackTimeout = setTimeout(() => {
         getTrackInfo().then((track) => {
-            chrome.runtime.sendMessage({ command: 'spotifyUpdateTrack', data: { track } });
+            chrome.runtime.sendMessage({
+                command: 'spotifyUpdateTrack',
+                data: { track },
+            });
         });
     }, 1000);
 }
@@ -14,21 +19,25 @@ function handlePlayerPlay() {
 // handle player ended event
 function handlePlayerEnded() {
     clearTimeout(trackTimeout);
-    chrome.runtime.sendMessage({ command: 'spotifyEnded', data: {} }, (response) => {
-    });
+    chrome.runtime.sendMessage(
+        { command: 'spotifyEnded', data: {} },
+        (response) => {}
+    );
 }
 
 // handle player abort event
 function handlePlayerAbort() {
     clearTimeout(trackTimeout);
-    chrome.runtime.sendMessage({ command: 'spotifyAbort', data: {} }), (response) => {
-    };
+    chrome.runtime.sendMessage({ command: 'spotifyAbort', data: {} }),
+        (response) => {};
 }
 
 // handle player pause event
 function handlePlayerPause() {
-    chrome.runtime.sendMessage({ command: 'spotifyPause', data: {} }, (response) => {
-    });
+    chrome.runtime.sendMessage(
+        { command: 'spotifyPause', data: {} },
+        (response) => {}
+    );
 }
 
 // handle player pause event
@@ -38,7 +47,10 @@ function handlePlayerSeek() {
 
 // handle player volume change event
 function handlePlayerVolumeInput(event) {
-    chrome.runtime.sendMessage({ command: 'setVolume', data: { volume: parseFloat(event.target.value) } });
+    chrome.runtime.sendMessage({
+        command: 'setVolume',
+        data: { volume: parseFloat(event.target.value) },
+    });
 }
 
 /**
@@ -73,18 +85,11 @@ function getAlbumName() {
  */
 
 function getPlayListName() {
-    let playListName = '';
-    const playButton = document.querySelector('.RootlistItemPlaylist__play-button');
+    const trackList = document.querySelector(
+        'div[data-testid="playlist-tracklist"]'
+    );
 
-    if (playButton) {
-        const playButtonPreviousSibling = playButton.previousElementSibling;
-        if (playButtonPreviousSibling) {
-            const playListNameWrapper = playButtonPreviousSibling.querySelector('.RootlistItemPlaylist__text-wrapper');
-            playListName = playListNameWrapper.innerText;
-        }
-
-    }
-    return playListName;
+    return trackList ? trackList.getAttribute('aria-label') || '' : '';
 }
 
 /**
@@ -92,65 +97,93 @@ function getPlayListName() {
  * @returns {boolean}
  */
 function isTrackInPlayList() {
-    const playButton = document.querySelector('.RootlistItemPlaylist__play-button');
+    const playButton = document.querySelector(
+        '.RootlistItemPlaylist__play-button'
+    );
     return !!playButton;
 }
 
 // get track info from dom
-const getTrackInfo = () => new Promise((resolve) => {
-    let directoryName = '';
-    const isPlaylistTrack = isTrackInPlayList();
+const getTrackInfo = () =>
+    new Promise((resolve) => {
+        let directoryName = '';
+        const isPlaylistTrack = isTrackInPlayList();
 
-    if (!isPlaylistTrack) {
-        directoryName = getAlbumName();
-    } else {
-        directoryName = getPlayListName();
-    }
-    const isPremium = document.querySelector('.AdsContainer') === null;
-
-    fetch('https://open.spotify.com/get_access_token?reason=transport&productType=web_player').then((data) => data.json()).then(json => {
-        if (json.accessToken && json.accessToken !== '') {
-            fetch('https://api.spotify.com/v1/me/player', {
-                headers: {
-                    'Authorization': `Bearer ${json.accessToken}`
-                }
-            }).then(res => res.json())
-                .then((t) => {
-                    if (t.currently_playing_type === 'ad') {
-                        const track = getLocalTrackInfo();
-                        track.type = 'ad';
-                        resolve(track);
-                        return;
-                    }
-
-                    const track = t.item;
-
-                    resolve({
-                        title: track.name,
-                        artist: track.artists.reduce((acc, a) => acc + (acc ? ', ' : '') + a.name, ''),
-                        duration: track.duration_ms,
-                        cover: track.album.images ? track.album.images[0].url : undefined,
-                        album: track.album.name,
-                        discNumber: track.disc_number,
-                        trackNumber: track.track_number,
-                        albumArtist: track.album.artists.reduce((acc, a) => acc + (acc ? ', ' : '') + a.name, ''),
-                        albumReleaseYear: parseInt(track.album.release_date.substring(0, 4), 10),
-                        isPremium,
-                        kbps: isPremium ? 256 : 128,
-                        directory: directoryName !== '' ? directoryName : undefined,
-                        progress: t.progress_ms,
-                        startTime: new Date()
-                    });
-                })
-                .catch((err) => {
-                    console.error('clipinc: could not retrieve remote track info', err);
-                    resolve(getLocalTrackInfo());
-                });
+        if (!isPlaylistTrack) {
+            directoryName = getAlbumName();
+        } else {
+            directoryName = getPlayListName();
         }
-    }).catch((ex) => {
-        console.log('ex', ex);
+        const isPremium = document.querySelector('.AdsContainer') === null;
+
+        fetch(
+            'https://open.spotify.com/get_access_token?reason=transport&productType=web_player'
+        )
+            .then((data) => data.json())
+            .then((json) => {
+                if (json.accessToken && json.accessToken !== '') {
+                    fetch('https://api.spotify.com/v1/me/player', {
+                        headers: {
+                            Authorization: `Bearer ${json.accessToken}`,
+                        },
+                    })
+                        .then((res) => res.json())
+                        .then((t) => {
+                            if (t.currently_playing_type === 'ad') {
+                                const track = getLocalTrackInfo();
+                                track.type = 'ad';
+                                resolve(track);
+                                return;
+                            }
+
+                            const track = t.item;
+
+                            resolve({
+                                title: track.name,
+                                artist: track.artists.reduce(
+                                    (acc, a) =>
+                                        acc + (acc ? ', ' : '') + a.name,
+                                    ''
+                                ),
+                                duration: track.duration_ms,
+                                cover: track.album.images
+                                    ? track.album.images[0].url
+                                    : undefined,
+                                album: track.album.name,
+                                discNumber: track.disc_number,
+                                trackNumber: track.track_number,
+                                albumArtist: track.album.artists.reduce(
+                                    (acc, a) =>
+                                        acc + (acc ? ', ' : '') + a.name,
+                                    ''
+                                ),
+                                albumReleaseYear: parseInt(
+                                    track.album.release_date.substring(0, 4),
+                                    10
+                                ),
+                                isPremium,
+                                kbps: isPremium ? 256 : 128,
+                                directory:
+                                    directoryName !== ''
+                                        ? directoryName
+                                        : undefined,
+                                progress: t.progress_ms,
+                                startTime: new Date(),
+                            });
+                        })
+                        .catch((err) => {
+                            console.error(
+                                'clipinc: could not retrieve remote track info',
+                                err
+                            );
+                            resolve(getLocalTrackInfo());
+                        });
+                }
+            })
+            .catch((ex) => {
+                console.log('ex', ex);
+            });
     });
-});
 
 function getLocalTrackInfo() {
     let directoryName = '';
@@ -171,7 +204,10 @@ function getLocalTrackInfo() {
     const title = aTags[1].innerText || '';
     const artist = aTags[2].innerText || '';
 
-    const duration = nowPlayingBar.querySelector('.progress-bar-wrapper + .playback-bar__progress-time').innerText || 0;
+    const duration =
+        nowPlayingBar.querySelector(
+            '.progress-bar-wrapper + .playback-bar__progress-time'
+        ).innerText || 0;
     const cover = nowPlayingBar.querySelector('.cover-art-image').src || '';
 
     return {
@@ -183,7 +219,7 @@ function getLocalTrackInfo() {
         kbps: isPremium ? 256 : 128,
         directory: directoryName !== '' ? directoryName : undefined,
         progress: 0,
-        startTime: Date.now()
+        startTime: Date.now(),
     };
 }
 
@@ -224,9 +260,9 @@ function getVolume() {
 // set volume
 function setVolume(volume) {
     const e = new CustomEvent('setvolume', {
-        detail: { volume }
+        detail: { volume },
     });
-    document.dispatchEvent(e)
+    document.dispatchEvent(e);
 }
 
 // overwrite spotify volume control, to prevent gain change while recording
@@ -240,7 +276,9 @@ function hijackVolumeControl() {
     input.min = 0;
     input.max = 1;
     input.step = 0.01;
-    input.value = JSON.parse(localStorage.getItem('playback')).volume.toFixed(2);
+    input.value = JSON.parse(localStorage.getItem('playback')).volume.toFixed(
+        2
+    );
     input.classList.add('slider');
     input.addEventListener('input', handlePlayerVolumeInput);
 
@@ -263,42 +301,47 @@ function releaseVolumeControl() {
     document.querySelector('.volume-bar').style.display = '';
 }
 
-chrome.runtime.onMessage.addListener(({ command, data }, sender, sendResponse) => {
-    switch (command) {
-        case 'prepareRecording':
-            const isReady = document.querySelector('body.clipinc-ready') !== null;
+chrome.runtime.onMessage.addListener(
+    ({ command, data }, sender, sendResponse) => {
+        switch (command) {
+            case 'prepareRecording':
+                const isReady =
+                    document.querySelector('body.clipinc-ready') !== null;
 
-            if (!isReady) {
-                location.reload();
-                return;
-            }
-
-            const error = !getIsLocalDevice() ? 'cannot record from remote device' : undefined;
-            const oldVolume = getVolume();
-
-            if (!error) {
-                hijackVolumeControl();
-                setVolume(1);
-            }
-
-            sendResponse({ volume: oldVolume, error });
-            break;
-        case 'startRecording':
-            skipBack();
-            setTimeout(() => {
-                if (!play()) {
-                    // if track is already running when starting the recording
-                    // dispatch play event so the track is known to clipinc
-                    handlePlayerPlay();
+                if (!isReady) {
+                    location.reload();
+                    return;
                 }
-            }, 1000);
-            break;
-        case 'stopRecording':
-            releaseVolumeControl();
-            setVolume(data.volume);
-            break;
+
+                const error = !getIsLocalDevice()
+                    ? 'cannot record from remote device'
+                    : undefined;
+                const oldVolume = getVolume();
+
+                if (!error) {
+                    hijackVolumeControl();
+                    setVolume(1);
+                }
+
+                sendResponse({ volume: oldVolume, error });
+                break;
+            case 'startRecording':
+                skipBack();
+                setTimeout(() => {
+                    if (!play()) {
+                        // if track is already running when starting the recording
+                        // dispatch play event so the track is known to clipinc
+                        handlePlayerPlay();
+                    }
+                }, 1000);
+                break;
+            case 'stopRecording':
+                releaseVolumeControl();
+                setVolume(data.volume);
+                break;
+        }
     }
-});
+);
 
 function play() {
     const el = document.querySelector('.control-button.spoticon-play-16');
@@ -349,7 +392,7 @@ function hijackPlayer() {
                 if (isRecording) {
                     setVolume(1);
                 }
-            })
+            });
         });
 
         // if player is already recording, hijack volume control immediately

@@ -1,17 +1,17 @@
 {
-  "name": {
-    "message": "clipinc®"
-  },
-  "description": {
-    "message": "Hol Dir die Songs von Spotify als lupenreinen MP3-Mitschnitt auf Deine Festplatte!"
-  },
-  "errorChangeDevice": {
-    "message": "Wähle unter \"Mit Gerät verbinden\" dieses Gerät aus, damit die Aufnahme gestartet werden kann."
-  },
-  "notificationDownloaded": {
-    "message": "##TITLE## - ##ARTIST## wurde erfolgreich aufgenommen."
-  },
-  "notificationStop": {
-    "message": "Die Aufnahme wurde abgebrochen."
-  }
+    "name": {
+        "message": "clipinc®"
+    },
+    "description": {
+        "message": "Hol Dir die Songs von Spotify als lupenreinen MP3-Mitschnitt auf Deine Festplatte!"
+    },
+    "errorChangeDevice": {
+        "message": "Wähle unter \"Mit Gerät verbinden\" dieses Gerät aus, damit die Aufnahme gestartet werden kann."
+    },
+    "notificationDownloaded": {
+        "message": "##TITLE## - ##ARTIST## wurde erfolgreich aufgenommen."
+    },
+    "notificationStop": {
+        "message": "Die Aufnahme wurde abgebrochen."
+    }
 }

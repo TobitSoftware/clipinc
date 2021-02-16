@@ -1,10 +1,9 @@
 const OPTIONS = {
     numChannels: 2,
-    bufferSize: undefined
+    bufferSize: undefined,
 };
 
 class Recorder {
-
     constructor(source) {
         this.context = source.context;
         if (this.context.createScriptProcessor == null) {
@@ -29,7 +28,11 @@ class Recorder {
         const buffer = [];
         const worker = this.worker;
 
-        this.processor = this.context.createScriptProcessor(OPTIONS.bufferSize, OPTIONS.numChannels, OPTIONS.numChannels);
+        this.processor = this.context.createScriptProcessor(
+            OPTIONS.bufferSize,
+            OPTIONS.numChannels,
+            OPTIONS.numChannels
+        );
         this.input.connect(this.processor);
         this.processor.connect(this.context.destination);
 
@@ -41,7 +44,7 @@ class Recorder {
         };
 
         this.worker.postMessage({
-            command: 'start'
+            command: 'start',
         });
     }
 
@@ -92,18 +95,15 @@ class Recorder {
             command: 'init',
             config: {
                 sampleRate: this.context.sampleRate,
-                numChannels: OPTIONS.numChannels
+                numChannels: OPTIONS.numChannels,
             },
-            options: OPTIONS
+            options: OPTIONS,
         });
     }
 
-    onEncodingProgress(recorder, progress) {
-    }
+    onEncodingProgress(recorder, progress) {}
 
-    onComplete(recorder, blob) {
-    }
+    onComplete(recorder, blob) {}
 
-    onError(recorder, error) {
-    }
+    onError(recorder, error) {}
 }

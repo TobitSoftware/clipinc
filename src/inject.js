@@ -10,7 +10,7 @@
         }
 
         const e = new CustomEvent(event.type, {});
-        document.dispatchEvent(e)
+        document.dispatchEvent(e);
     }
 
     document.createElement = function (tag) {
@@ -25,13 +25,16 @@
             element.addEventListener('abort', dispatchToDocument);
             element.addEventListener('seeking', dispatchToDocument);
 
-            document.addEventListener('setvolume', (event) => element.volume = event.detail.volume);
+            document.addEventListener(
+                'setvolume',
+                (event) => (element.volume = event.detail.volume)
+            );
 
             const e = new CustomEvent('initplayer');
-            document.dispatchEvent(e)
+            document.dispatchEvent(e);
         }
 
-        return element
+        return element;
     };
 
     document.body.classList.add('clipinc-ready');

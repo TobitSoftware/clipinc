@@ -15,15 +15,9 @@
     },
     "content_scripts": [
         {
-            "matches": [
-                "https://open.spotify.com/*"
-            ],
-            "js": [
-                "content.js"
-            ],
-            "css": [
-                "slider.css"
-            ]
+            "matches": ["https://open.spotify.com/*"],
+            "js": ["content.js"],
+            "css": ["slider.css"]
         }
     ],
     "default_locale": "de",
@@ -47,9 +41,7 @@
         "notifications"
     ],
     "version": "1.12.1",
-    "web_accessible_resources": [
-        "inject.js"
-    ],
+    "web_accessible_resources": ["inject.js"],
     "-ms-preload": {
         "backgroundScript": "backgroundScriptsAPIBridge.js",
         "contentScript": "contentScriptsAPIBridge.js"
