@@ -168,21 +168,17 @@ function getLocalTrackInfo() {
     const nowPlaying = document.querySelector('div.now-playing');
     const aTags = nowPlaying.querySelectorAll('a');
 
-    //const title = nowPlaying.querySelector("[data-testid=nowplaying-track-link]").innerText;
-    //const artist = nowPlayingBar.querySelector('.track-info__artists').innerText;
-    //const title = nowPlayingBar.querySelector('.track-info__name').innerText;
-
     const title = aTags[1].innerText || '';
     const artist = aTags[2].innerText || '';
 
-    const duration = nowPlayingBar.querySelector('.progress-bar + .playback-bar__progress-time').innerText || 0;
-    const cover = nowPlayingBar.querySelector('.cover-art-image').style.backgroundImage || '';
+    const duration = nowPlayingBar.querySelector('.progress-bar-wrapper + .playback-bar__progress-time').innerText || 0;
+    const cover = nowPlayingBar.querySelector('.cover-art-image').src || '';
 
     return {
         artist,
         title,
         duration: durationToMs(duration),
-        cover: cover.substring('url("'.length, cover.length - '")'.length),
+        cover,
         isPremium,
         kbps: isPremium ? 256 : 128,
         directory: directoryName !== '' ? directoryName : undefined,
