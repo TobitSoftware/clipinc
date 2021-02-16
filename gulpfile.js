@@ -1,37 +1,32 @@
-const gulp = require('gulp');
-const uglify = require('gulp-uglify');
-const pump = require('pump');
-const babel = require('gulp-babel');
+const gulp = require("gulp");
+const babel = require("gulp-babel");
+const terser = require("gulp-terser");
+const clean = require("gulp-clean");
 
-gulp.task('default', ['build', 'copy', 'copyEncoders']);
+gulp.task("clean", () =>
+    gulp.src(["build/"], { allowEmpty: true }).pipe(clean())
+);
 
-gulp.task('copy', function (cb) {
-    pump([
-            gulp.src(['src/**/*', '!src/**/*.js']),
-            gulp.dest('build')
-        ],
-        cb
-    );
-});
+gulp.task("copy-assets", () =>
+    gulp.src(["src/**/*", "!src/**/*.js"]).pipe(gulp.dest("build"))
+);
 
-gulp.task('copyEncoders', function (cb) {
-    pump([
-            gulp.src(['src/encoders/*']),
-            gulp.dest('build/encoders')
-        ],
-        cb
-    );
-});
+gulp.task("copy-encoders", () =>
+    gulp.src(["src/encoders/*"]).pipe(gulp.dest("build/encoders"))
+);
 
-gulp.task('build', function (cb) {
-    pump([
-            gulp.src(['src/**/*.js', '!src/encoders/*.js']),
-            babel({
-                "presets": ["env"]
-            }),
-            uglify(),
-            gulp.dest('build')
-        ],
-        cb
-    );
-});
+gulp.task("build-js", () =>
+    gulp
+        .src(["src/**/*.js", "!src/encoders/*.js"])
+        .pipe(babel())
+        .pipe(terser())
+        .pipe(gulp.dest("build"))
+);
+
+gulp.task(
+    "build",
+    gulp.series(
+        "clean",
+        gulp.parallel("copy-assets", "copy-encoders", "build-js")
+    )
+);

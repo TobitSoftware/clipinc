@@ -1,24 +1,23 @@
 {
-  "name": "clipinc",
-  "version": "1.0.0",
-  "description": "clipinc chrome browser extension to record spotify songs",
-  "main": "src/manifest.json",
-  "scripts": {
-    "build": "gulp",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/TobitSoftware/clipinc"
-  },
-  "author": "Tobit Software",
-  "license": "MIT",
-  "devDependencies": {
-    "babel-core": "^6.26.3",
-    "babel-preset-env": "^1.7.0",
-    "gulp": "^3.9.1",
-    "gulp-babel": "^7.0.1",
-    "gulp-uglify": "^3.0.1",
-    "pump": "^3.0.0"
-  }
+    "name": "clipinc",
+    "version": "1.0.0",
+    "description": "clipinc chrome browser extension to record spotify songs",
+    "main": "src/manifest.json",
+    "scripts": {
+        "build": "gulp build"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/TobitSoftware/clipinc"
+    },
+    "author": "Tobit Software",
+    "license": "MIT",
+    "devDependencies": {
+        "@babel/core": "^7.12.16",
+        "@babel/preset-env": "^7.12.16",
+        "gulp": "^4.0.2",
+        "gulp-babel": "^8.0.0",
+        "gulp-clean": "^0.4.0",
+        "gulp-terser": "^2.0.1"
+    }
 }
