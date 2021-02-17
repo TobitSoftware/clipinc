@@ -68,28 +68,21 @@ function isAlbumTrack() {
  * @returns {string}
  */
 function getAlbumName() {
-    let name = '';
+    const trackList = document.querySelector('div[data-testid="track-list"]');
 
-    const nameWrapper = document.querySelector('.mo-info-name');
-
-    if (nameWrapper) {
-        return nameWrapper.innerText;
-    }
-
-    return name;
+    return trackList ? trackList.getAttribute('aria-label') || '' : '';
 }
 
 /**
  * Searches in the DOM for the playlist name
  * @returns {string}
  */
-
 function getPlayListName() {
     const trackList = document.querySelector(
         'div[data-testid="playlist-tracklist"]'
     );
 
-    return trackList ? trackList.getAttribute('aria-label') || '' : '';
+    return trackList?.getAttribute('aria-label') || '';
 }
 
 /**
@@ -97,10 +90,10 @@ function getPlayListName() {
  * @returns {boolean}
  */
 function isTrackInPlayList() {
-    const playButton = document.querySelector(
-        '.RootlistItemPlaylist__play-button'
+    const playlist = document.querySelector(
+        'div[data-testid="playlist-tracklist"]'
     );
-    return !!playButton;
+    return Boolean(playlist);
 }
 
 // get track info from dom
