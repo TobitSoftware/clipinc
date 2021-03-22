@@ -11,7 +11,12 @@
     "main": "src/manifest.json",
     "scripts": {
         "build": "gulp build",
-        "format": "prettier . --write"
+        "format": "prettier . --write",
+        "prepare": "husky install",
+        "format-staged": "pretty-quick --staged"
+    },
+    "dependencies": {
+        "pretty-quick": "^3.1.0"
     },
     "devDependencies": {
         "@babel/core": "^7.13.10",
@@ -20,8 +25,7 @@
         "gulp-babel": "^8.0.0",
         "gulp-clean": "^0.4.0",
         "gulp-terser": "^2.0.1",
-        "husky": "^4.3.8",
-        "lint-staged": "^10.5.4",
+        "husky": "^5.2.0",
         "prettier": "^2.2.1",
         "prettier-plugin-packagejson": "^2.2.10"
     }

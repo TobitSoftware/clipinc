@@ -1,3 +1,0 @@
-# Run prettier on all supported file types
-'*.+(js|jsx|ts|tsx|json|md|css|scss|yml|yaml)':
-    - prettier --write
