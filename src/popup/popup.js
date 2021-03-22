@@ -1,3 +1,5 @@
+import('./popup.css');
+
 chrome.runtime.onMessage.addListener(({ command, data }) => {
     switch (command) {
         case 'spotifyPlay':

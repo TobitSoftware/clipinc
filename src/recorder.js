@@ -75,7 +75,7 @@ class Recorder {
             this.worker.terminate();
         }
 
-        this.worker = new Worker('/workers/Mp3Worker.js');
+        this.worker = new Worker('/worker.js');
         this.worker.onmessage = (event) => {
             const data = event.data;
             switch (data.command) {
