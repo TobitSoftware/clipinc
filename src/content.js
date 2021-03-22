@@ -190,18 +190,17 @@ function getLocalTrackInfo() {
     }
     const isPremium = document.querySelector('.AdsContainer') === null;
 
-    const nowPlayingBar = document.querySelector('div.now-playing-bar');
-    const nowPlaying = document.querySelector('div.now-playing');
-    const aTags = nowPlaying.querySelectorAll('a');
-
-    const title = aTags[1].innerText || '';
-    const artist = aTags[2].innerText || '';
+    const title = document.querySelector(
+        'a[data-testid="nowplaying-track-link"]'
+    ).textContent;
+    const artist = document.querySelector('a[data-testid="nowplaying-artist"]')
+        .textContent;
 
     const duration =
-        nowPlayingBar.querySelector(
-            '.progress-bar-wrapper + .playback-bar__progress-time'
-        ).innerText || 0;
-    const cover = nowPlayingBar.querySelector('.cover-art-image').src || '';
+        document.querySelector('[data-testid="playback-duration"]')
+            .textContent || 0;
+    const cover =
+        document.querySelector('img[data-testid="cover-art-image"]').src || '';
 
     return {
         artist,
