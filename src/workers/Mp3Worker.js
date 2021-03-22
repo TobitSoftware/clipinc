@@ -1,5 +1,5 @@
-importScripts('/../encoders/Mp3Encoder.min.js');
-importScripts('/../encoders/browser-id3-writer.js');
+importScripts('/encoders/Mp3Encoder.min.js');
+importScripts('/encoders/browser-id3-writer.js');
 
 const NUM_CH = 2;
 let sampleRate = 44100,

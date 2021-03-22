@@ -6,14 +6,13 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 /** @type {import("webpack").Configuration} */
 module.exports = {
-    mode: 'production',
+    mode: 'development',
+    devtool: 'cheap-module-source-map',
     entry: {
         popup: './src/popup/popup.js',
         content: './src/content.js',
-        recorder: './src/recorder.js',
         background: './src/background.js',
         inject: './src/inject.js',
-        worker: './src/workers/Mp3Worker.js',
     },
     output: {
         path: path.resolve(__dirname, 'dist'),
@@ -47,13 +46,13 @@ module.exports = {
         new CleanWebpackPlugin(),
         new HtmlWebpackPlugin({
             template: './src/background.html',
-            chunks: ['recorder', 'background'],
+            chunks: ['background'],
             filename: 'background.html',
         }),
         new HtmlWebpackPlugin({
             template: './src/popup/popup.html',
             chunks: ['popup'],
-            filename: 'popup.html',
+            filename: 'popup/index.html',
         }),
         new MiniCssExtractPlugin(),
     ],

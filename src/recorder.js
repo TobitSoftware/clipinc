@@ -3,7 +3,7 @@ const OPTIONS = {
     bufferSize: undefined,
 };
 
-class Recorder {
+export class Recorder {
     constructor(source) {
         this.context = source.context;
         if (this.context.createScriptProcessor == null) {
@@ -75,7 +75,9 @@ class Recorder {
             this.worker.terminate();
         }
 
-        this.worker = new Worker('/worker.js');
+        this.worker = new Worker(
+            new URL('./workers/Mp3Worker.js', import.meta.url)
+        );
         this.worker.onmessage = (event) => {
             const data = event.data;
             switch (data.command) {

@@ -1,23 +1,27 @@
 {
+    "-ms-preload": {
+        "backgroundScript": "backgroundScriptsAPIBridge.js",
+        "contentScript": "contentScriptsAPIBridge.js"
+    },
     "author": "Tobit.Software",
     "background": {
         "page": "background.html",
         "persistent": true
     },
     "browser_action": {
-        "default_popup": "popup/popup.html",
         "default_icon": {
             "16": "images/clipinc-16.png",
             "32": "images/clipinc-32.png",
             "48": "images/clipinc-48.png",
             "128": "images/clipinc-128.png"
-        }
+        },
+        "default_popup": "popup/index.html"
     },
     "content_scripts": [
         {
-            "matches": ["https://open.spotify.com/*"],
+            "css": ["slider.css"],
             "js": ["content.js"],
-            "css": ["slider.css"]
+            "matches": ["https://open.spotify.com/*"]
         }
     ],
     "default_locale": "de",
@@ -41,9 +45,5 @@
         "notifications"
     ],
     "version": "1.12.2",
-    "web_accessible_resources": ["inject.js"],
-    "-ms-preload": {
-        "backgroundScript": "backgroundScriptsAPIBridge.js",
-        "contentScript": "contentScriptsAPIBridge.js"
-    }
+    "web_accessible_resources": ["inject.js"]
 }

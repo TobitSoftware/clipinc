@@ -1,4 +1,4 @@
-import('./popup.css');
+import './popup.css';
 
 chrome.runtime.onMessage.addListener(({ command, data }) => {
     switch (command) {
