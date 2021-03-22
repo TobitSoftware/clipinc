@@ -12,7 +12,7 @@
     "scripts": {
         "build": "gulp build",
         "format": "prettier . --write",
-        "prepare": "husky install",
+        "prepare": "husky install && shx rm -rf .git/hooks && shx ln -s ../.husky .git/hooks",
         "format-staged": "pretty-quick --staged"
     },
     "dependencies": {
@@ -27,6 +27,7 @@
         "gulp-terser": "^2.0.1",
         "husky": "^5.2.0",
         "prettier": "^2.2.1",
-        "prettier-plugin-packagejson": "^2.2.10"
+        "prettier-plugin-packagejson": "^2.2.10",
+        "shx": "^0.3.3"
     }
 }
