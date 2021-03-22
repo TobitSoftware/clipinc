@@ -10,15 +10,14 @@
     "author": "Tobit Software",
     "main": "src/manifest.json",
     "scripts": {
-        "build": "gulp build",
+        "build": "webpack build",
+        "watch": "webpack watch --env development",
         "format": "prettier . --write",
         "prepare": "husky install && shx rm -rf .git/hooks && shx ln -s ../.husky .git/hooks",
         "format-staged": "pretty-quick --staged"
     },
     "dependencies": {
-        "browser-id3-writer": "^4.4.0",
-        "lamejs": "^1.2.0",
-        "pretty-quick": "^3.1.0"
+        "core-js": "^3.9.1"
     },
     "devDependencies": {
         "@babel/core": "^7.13.10",
@@ -36,6 +35,7 @@
         "mini-css-extract-plugin": "^1.3.9",
         "prettier": "^2.2.1",
         "prettier-plugin-packagejson": "^2.2.10",
+        "pretty-quick": "^3.1.0",
         "shx": "^0.3.3",
         "webpack": "^5.27.1",
         "webpack-cli": "^4.5.0"
