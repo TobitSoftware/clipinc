@@ -1,3 +1,5 @@
+import { Recorder } from './recorder';
+
 // reset storage after installation
 chrome.runtime.onInstalled.addListener(resetStorage);
 
