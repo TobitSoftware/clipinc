@@ -1,8 +1,4 @@
 {
-    "-ms-preload": {
-        "backgroundScript": "backgroundScriptsAPIBridge.js",
-        "contentScript": "contentScriptsAPIBridge.js"
-    },
     "author": "Tobit.Software",
     "background": {
         "page": "background.html",
