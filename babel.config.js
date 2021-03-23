@@ -9,5 +9,7 @@ module.exports = {
                 corejs: '3.9',
             },
         ],
+        ['@babel/react', { runtime: 'automatic' }],
     ],
+    plugins: ['@emotion'],
 };

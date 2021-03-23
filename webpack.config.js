@@ -9,12 +9,14 @@ const outputPath = path.join(__dirname, 'dist');
 
 fs.rmSync(outputPath, { recursive: true, force: true });
 
+/** @type {(env: Record<string, string>) => import("webpack").Configuration} */
 function getCommonConfig(env) {
     const isDevelopment = Boolean(env.development);
 
     return {
         mode: isDevelopment ? 'development' : 'production',
         devtool: isDevelopment ? 'cheap-module-source-map' : false,
+        resolve: { extensions: ['.js', '.jsx', '.ts', '.tsx'] },
         module: {
             rules: [
                 {
@@ -25,6 +27,17 @@ function getCommonConfig(env) {
                 {
                     test: /\.css$/i,
                     use: [MiniCssExtractPlugin.loader, 'css-loader'],
+                },
+                {
+                    test: /\.(png|jpg|gif)$/i,
+                    use: [
+                        {
+                            loader: 'url-loader',
+                            options: {
+                                limit: 8192,
+                            },
+                        },
+                    ],
                 },
             ],
         },
