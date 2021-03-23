@@ -156,6 +156,7 @@ export function App() {
             coverSrc={coverSrc}
             onCoverLoadError={handleCoverLoadError}
             progress={progress}
+            onRecordStateChange={setIsRecording}
         />
     );
 }
