@@ -1,6 +1,7 @@
 import { keyframes } from '@emotion/react';
 import styled from '@emotion/styled';
 import React from 'react';
+import { ProgressBar } from './ProgressBar';
 
 export default function TrackInfo({
     coverSrc,
@@ -23,9 +24,7 @@ export default function TrackInfo({
                     <Artist>{artist}</Artist>
                 </div>
             </InfoContainer>
-            <ProgressBar>
-                <ProgressBarTrack style={{ width: `${progress}%` }} />
-            </ProgressBar>
+            <ProgressBar progress={progress} />
         </div>
     );
 }
@@ -74,15 +73,4 @@ const Artist = styled.span`
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
-`;
-
-const ProgressBar = styled.div`
-    background-color: #161616;
-    height: 2px;
-    width: 100%;
-`;
-
-const ProgressBarTrack = styled.div`
-    background-color: #1db954;
-    height: 100%;
 `;

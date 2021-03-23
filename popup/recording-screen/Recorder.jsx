@@ -1,8 +1,8 @@
 import styled from '@emotion/styled';
 import React, { useState } from 'react';
 import logoSrc from '../logo.png';
+import TrackInfo from '../track-info/TrackInfo';
 import DownloadInfo from './DownloadInfo';
-import TrackInfo from './TrackInfo';
 
 export function Recorder({
     isRecording,
@@ -118,7 +118,8 @@ const SwitchLabel = styled.label`
         border-radius: 50%;
         box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
         content: ' ';
-        transition: transform 100ms linear, opacity 100ms ease-in-out;
+        transition: transform 100ms cubic-bezier(0.4, 0, 0.2, 1),
+            opacity 100ms linear;
     }
 
     ${SwitchInput}:checked + &:before {

@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import placeholderSrc from '../placeholder.png';
-import { Recorder } from './Recorder';
-import { StartScreen } from './StartScreen';
+import { IntroScreen } from './intro-screen/IntroScreen';
+import placeholderSrc from './placeholder.png';
+import { Recorder } from './recording-screen/Recorder';
 
 export function App() {
     const [showIntro, setShowIntro] = useState(true);
@@ -144,7 +144,7 @@ export function App() {
     );
 
     if (showIntro) {
-        return <StartScreen />;
+        return <IntroScreen />;
     }
 
     return (

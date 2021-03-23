@@ -1,11 +1,11 @@
 import styled from '@emotion/styled';
 import React from 'react';
-import introSrc from '../intro.png';
+import introSrc from './intro.png';
 
 const SPOTIFY_LOGIN_URL =
     'https://accounts.spotify.com/de/login?continue=https:%2F%2Fopen.spotify.com%2Fbrowse%2Ffeatured';
 
-export function StartScreen() {
+export function IntroScreen() {
     function launchSpotify() {
         chrome.tabs.query(
             { active: true, currentWindow: true },
@@ -73,7 +73,7 @@ const Explanation = styled.p`
     margin: 0 0 16px;
     text-align: center;
     color: #989898;
-    width: 55%;
+    width: 68%;
 `;
 
 const OpenSpotifyButton = styled.button`
@@ -86,7 +86,7 @@ const OpenSpotifyButton = styled.button`
     padding: 7px 12px;
     box-shadow: 1px 2px 3px rgba(0, 0, 0, 0.4);
     cursor: pointer;
-    transition: background-color 150ms ease;
+    transition: background-color 150ms;
 `;
 
 const OpenSourceDisclaimer = styled.p`
