@@ -10,8 +10,8 @@
     "author": "Tobit Software",
     "main": "src/manifest.json",
     "scripts": {
-        "build": "webpack build",
-        "watch": "webpack watch --env development",
+        "build": "webpack",
+        "dev-build": "webpack --env development",
         "format": "prettier . --write",
         "prepare": "husky install && shx rm -rf .git/hooks && shx ln -s ../.husky .git/hooks",
         "format-staged": "pretty-quick --staged"
