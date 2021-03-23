@@ -1,23 +1,23 @@
-<h1 align="center"><a href="https://tobit.software/clipinc">clipinc®</a></h1>
+<h1 align="center"><a href="https://tobit.software/clipinc" target="_blank">clipinc®</a></h1>
 
 <p align="center">
     <strong>Records Spotify songs in your browser as you listen to them</strong>
 </p>
 
 <p align="center">
-    <a href="https://chrome.google.com/webstore/detail/clipinc%C2%AE/oppggbgnmeainpanihcbcdniomfobmec">
+    <a href="https://chrome.google.com/webstore/detail/clipinc%C2%AE/oppggbgnmeainpanihcbcdniomfobmec" target="_blank">
         <img
             alt="Chrome Web Store"
             src="https://img.shields.io/chrome-web-store/v/oppggbgnmeainpanihcbcdniomfobmec?style=for-the-badge&color=%2310B981&labelColor=%2327272A"
         />
     </a>
-    <a href="https://chrome.google.com/webstore/detail/clipinc%C2%AE/oppggbgnmeainpanihcbcdniomfobmec">
+    <a href="https://chrome.google.com/webstore/detail/clipinc%C2%AE/oppggbgnmeainpanihcbcdniomfobmec" target="_blank">
         <img
             alt="Chrome Web Store"
             src="https://img.shields.io/chrome-web-store/users/oppggbgnmeainpanihcbcdniomfobmec?style=for-the-badge&color=%230EA5E9&labelColor=%2327272A"
         />
     </a>
-    <a href="https://github.com/TobitSoftware/clipinc/blob/main/LICENSE">
+    <a href="https://github.com/TobitSoftware/clipinc/blob/main/LICENSE" target="_blank">
         <img
             alt="GitHub"
             src="https://img.shields.io/github/license/TobitSoftware/clipinc?style=for-the-badge&color=%236366F1&labelColor=%2327272A"
@@ -47,14 +47,14 @@ The extension is available from both the Chrome Web Store and the Microsoft
 Edge-Add-Ons:
 
 <p align="center">
-    <a href="https://chrome.google.com/webstore/detail/clipinc%C2%AE/oppggbgnmeainpanihcbcdniomfobmec">
+    <a href="https://chrome.google.com/webstore/detail/clipinc%C2%AE/oppggbgnmeainpanihcbcdniomfobmec" target="_blank">
         <img
             src="./readme-assets/chrome-web-store.png"
             alt="Available in the Chrome Web Store"
             height="48"
         />
     </a>
-    <a href="https://microsoftedge.microsoft.com/addons/detail/clipinc%C2%AE/chioloodckidjhigkknplmlelmcghmfm">
+    <a href="https://microsoftedge.microsoft.com/addons/detail/clipinc%C2%AE/chioloodckidjhigkknplmlelmcghmfm" target="_blank">
         <img
             src="./readme-assets/microsoft-store.png"
             alt="Get it from Microsoft"
