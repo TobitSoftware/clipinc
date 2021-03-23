@@ -49,7 +49,7 @@ const startCapture = () =>
                                     message: chrome.i18n.getMessage(
                                         'errorChangeDevice'
                                     ),
-                                    iconUrl: 'images/clipinc-128.png',
+                                    iconUrl: 'assets/images/clipinc-128.png',
                                 },
                                 console.debug.bind(console)
                             );
@@ -114,7 +114,8 @@ const startCapture = () =>
                                         message: chrome.i18n.getMessage(
                                             'notificationStop'
                                         ),
-                                        iconUrl: 'images/clipinc-128.png',
+                                        iconUrl:
+                                            'assets/images/clipinc-128.png',
                                     },
                                     console.debug.bind(console)
                                 );
@@ -276,7 +277,7 @@ function download(recorder, track) {
             type: 'basic',
             title: chrome.i18n.getMessage('name'),
             message,
-            iconUrl: 'images/clipinc-128.png',
+            iconUrl: 'assets/images/clipinc-128.png',
         },
         console.debug.bind(console)
     );
@@ -302,10 +303,10 @@ function cleanDownloadShelf(delta) {
 function setDefaultIcon() {
     chrome.browserAction.setIcon({
         path: {
-            16: 'images/clipinc-16.png',
-            32: 'images/clipinc-32.png',
-            48: 'images/clipinc-48.png',
-            128: 'images/clipinc-128.png',
+            16: 'assets/images/clipinc-16.png',
+            32: 'assets/images/clipinc-32.png',
+            48: 'assets/images/clipinc-48.png',
+            128: 'assets/images/clipinc-128.png',
         },
     });
 }
@@ -314,10 +315,10 @@ function setDefaultIcon() {
 function setRecordingIcon() {
     chrome.browserAction.setIcon({
         path: {
-            16: 'images/clipinc-16-record.png',
-            32: 'images/clipinc-32-record.png',
-            48: 'images/clipinc-48-record.png',
-            128: 'images/clipinc-128-record.png',
+            16: 'assets/images/clipinc-16-record.png',
+            32: 'assets/images/clipinc-32-record.png',
+            48: 'assets/images/clipinc-48-record.png',
+            128: 'assets/images/clipinc-128-record.png',
         },
     });
 }
