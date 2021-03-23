@@ -368,7 +368,7 @@ function skipBack() {
 //load inject.js to start the player hijack
 function hijackPlayer() {
     const s = document.createElement('script');
-    s.src = chrome.extension.getURL('inject.js');
+    s.src = chrome.extension.getURL('content/inject.js');
     s.onload = function () {
         this.remove();
 

@@ -75,9 +75,7 @@ export class Recorder {
             this.worker.terminate();
         }
 
-        this.worker = new Worker(
-            new URL('./workers/Mp3Worker.js', import.meta.url)
-        );
+        this.worker = new Worker(new URL('./Mp3Worker.js', import.meta.url));
         this.worker.onmessage = (event) => {
             const data = event.data;
             switch (data.command) {

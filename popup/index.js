@@ -1,4 +1,4 @@
-import './popup.css';
+import './styles.css';
 
 chrome.runtime.onMessage.addListener(({ command, data }) => {
     switch (command) {
@@ -36,7 +36,7 @@ chrome.runtime.onMessage.addListener(({ command, data }) => {
 
 const $cover = document.querySelector('.cover');
 $cover.addEventListener('error', () => {
-    $cover.setAttribute('src', '../images/placeholder.png');
+    $cover.setAttribute('src', '/assets/images/placeholder.png');
 });
 
 const $body = document.querySelector('.body');
