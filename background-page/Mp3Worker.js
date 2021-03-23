@@ -1,3 +1,6 @@
+/* eslint-env worker */
+/* global Mp3LameEncoder, ID3Writer */
+
 importScripts('./encoders/Mp3Encoder.min.js');
 importScripts('./encoders/browser-id3-writer.js');
 

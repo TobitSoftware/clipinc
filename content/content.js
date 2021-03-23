@@ -28,8 +28,10 @@ function handlePlayerEnded() {
 // handle player abort event
 function handlePlayerAbort() {
     clearTimeout(trackTimeout);
-    chrome.runtime.sendMessage({ command: 'spotifyAbort', data: {} }),
-        (response) => {};
+    chrome.runtime.sendMessage(
+        { command: 'spotifyAbort', data: {} },
+        (response) => {}
+    );
 }
 
 // handle player pause event
@@ -301,7 +303,7 @@ chrome.runtime.onMessage.addListener(
                     document.querySelector('body.clipinc-ready') !== null;
 
                 if (!isReady) {
-                    location.reload();
+                    window.location.reload();
                     return;
                 }
 
