@@ -56,16 +56,20 @@ beforeAll(async () => {
         ===== COOKIE NOTICE ======
         ======================= */
 
-        const buttonXPath = "//button[contains(., 'Accept Cookies')]";
-        await page.waitForXPath(buttonXPath);
-        await page.waitForTimeout(1000);
+        try {
+            const buttonXPath = "//button[contains(., 'Accept Cookies')]";
+            await page.waitForXPath(buttonXPath, { timeout: 5000 });
+            await page.waitForTimeout(1000);
 
-        const [button] = await page.$x(buttonXPath);
-        if (button) {
-            await button.click();
+            const [button] = await page.$x(buttonXPath);
+            if (button) {
+                await button.click();
+            }
+
+            await page.waitForTimeout(500);
+        } catch {
+            // Whatever, no cookie notice is also fine.
         }
-
-        await page.waitForTimeout(500);
 
         /** ======================
         ======= PLAY TRACK =======
