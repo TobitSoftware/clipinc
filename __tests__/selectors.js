@@ -16,67 +16,73 @@ let browser;
 let page;
 
 beforeAll(async () => {
-    const CHROME_EXECUTABLE_PATH = ChromeLauncher.Launcher.getFirstInstallation();
+    try {
+        const executablePath = ChromeLauncher.Launcher.getFirstInstallation();
 
-    browser = await puppeteer.launch({
-        headless: false,
-        defaultViewport: null,
-        args: ['--window-size=1920,1080'],
-        executablePath: CHROME_EXECUTABLE_PATH,
-    });
+        console.log(`Google Chrome Binary found at \`${executablePath}\``);
 
-    const pages = await browser.pages();
-    page = pages[0];
+        browser = await puppeteer.launch({
+            headless: false,
+            defaultViewport: null,
+            args: ['--window-size=1920,1080'],
+            executablePath,
+        });
 
-    await page.setExtraHTTPHeaders({ 'Accept-Language': 'en' });
+        const pages = await browser.pages();
+        page = pages[0];
 
-    /** ======================
-     ========= LOGIN =========
-     ====================== */
+        await page.setExtraHTTPHeaders({ 'Accept-Language': 'en' });
 
-    await page.goto(
-        'https://accounts.spotify.com/en/login?continue=https:%2F%2Fopen.spotify.com%2F',
-        { waitUntil: 'networkidle2' }
-    );
+        /** ======================
+        ========= LOGIN ==========
+        ======================= */
 
-    const usernameSelector = 'input[name=username]';
-    await page.waitForSelector(usernameSelector);
-    await page.type(usernameSelector, USERNAME, { delay: 20 });
+        await page.goto(
+            'https://accounts.spotify.com/en/login?continue=https:%2F%2Fopen.spotify.com%2F',
+            { waitUntil: 'networkidle2' }
+        );
 
-    const passwordSelector = 'input[name=password]';
-    await page.waitForSelector(passwordSelector);
-    await page.type(passwordSelector, PASSWORD, { delay: 20 });
+        const usernameSelector = 'input[name=username]';
+        await page.waitForSelector(usernameSelector);
+        await page.type(usernameSelector, USERNAME, { delay: 20 });
 
-    await page.keyboard.press('Enter');
+        const passwordSelector = 'input[name=password]';
+        await page.waitForSelector(passwordSelector);
+        await page.type(passwordSelector, PASSWORD, { delay: 20 });
 
-    /** ======================
-     ===== COOKIE NOTICE =====
-     ====================== */
+        await page.keyboard.press('Enter');
 
-    const buttonXPath = "//button[contains(., 'Accept Cookies')]";
-    await page.waitForXPath(buttonXPath);
-    await page.waitForTimeout(1000);
+        /** ======================
+        ===== COOKIE NOTICE ======
+        ======================= */
 
-    const [button] = await page.$x(buttonXPath);
-    if (button) {
-        await button.click();
+        const buttonXPath = "//button[contains(., 'Accept Cookies')]";
+        await page.waitForXPath(buttonXPath);
+        await page.waitForTimeout(1000);
+
+        const [button] = await page.$x(buttonXPath);
+        if (button) {
+            await button.click();
+        }
+
+        await page.waitForTimeout(500);
+
+        /** ======================
+        ======= PLAY TRACK =======
+        ======================= */
+
+        await page.goto(ALBUM_URL, { waitUntil: 'networkidle2' });
+
+        const trackNameXPath = `//*[contains(text(), "Famous")]`;
+        await page.waitForXPath(trackNameXPath);
+        await page.waitForTimeout(500);
+        const [trackNameElement] = await page.$x(trackNameXPath);
+        await trackNameElement.click({ clickCount: 2, delay: 50 });
+
+        await page.waitForTimeout(2000);
+    } catch (e) {
+        console.error(e);
     }
-
-    await page.waitForTimeout(500);
-
-    /** ======================
-     ====== PLAY TRACK =======
-     ====================== */
-
-    await page.goto(ALBUM_URL, { waitUntil: 'networkidle2' });
-
-    const trackNameXPath = `//*[contains(text(), "Famous")]`;
-    await page.waitForXPath(trackNameXPath);
-    await page.waitForTimeout(500);
-    const [trackNameElement] = await page.$x(trackNameXPath);
-    await trackNameElement.click({ clickCount: 2, delay: 50 });
-
-    await page.waitForTimeout(2000);
 }, 60000);
 
 afterAll(async () => {
