@@ -10,11 +10,13 @@ on:
         - cron: '0 */4 * * *'
 
 jobs:
-    build:
+    test:
         runs-on: ubuntu-latest
 
         steps:
-            - uses: actions/checkout@v2
+            - name: Checkout
+              uses: actions/checkout@v2
+
             - name: Use Node.js 14
               uses: actions/setup-node@v1
               with:
@@ -23,5 +25,8 @@ jobs:
             - name: Install dependencies
               run: npm ci
 
+            - name: Install xvfb
+              run: sudo apt-get install xvfb
+
             - name: Test selectors
-              run: npm test -- __tests__/selectors.js
+              run: xvfb-run --auto-servernum npm test -- __tests__/selectors.js
