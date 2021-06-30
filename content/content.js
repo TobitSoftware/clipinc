@@ -95,6 +95,7 @@ function isTrackInPlayList() {
     const playlist = document.querySelector(
         'div[data-testid="playlist-tracklist"]'
     );
+
     return Boolean(playlist);
 }
 
@@ -195,8 +196,9 @@ function getLocalTrackInfo() {
     const title = document.querySelector(
         'a[data-testid="nowplaying-track-link"]'
     ).textContent;
-    const artist = document.querySelector('a[data-testid="nowplaying-artist"]')
-        .textContent;
+    const artist = document.querySelector(
+        'a[data-testid="nowplaying-artist"]'
+    ).textContent;
 
     const duration =
         document.querySelector('[data-testid="playback-duration"]')
@@ -242,7 +244,9 @@ function getAccessToken() {
 
 // checks if playback is on the local device
 function getIsLocalDevice() {
-    return document.querySelector('.ConnectBar') === null;
+    const connectBar = document.querySelector('.ConnectBar');
+
+    return connectBar === null;
 }
 
 // get current volume from dom
@@ -261,7 +265,9 @@ function setVolume(volume) {
 
 // overwrite spotify volume control, to prevent gain change while recording
 function hijackVolumeControl() {
-    if (document.querySelector('.volume-bar--hijacked') !== null) {
+    const hijackedVolumeBar = document.querySelector('.volume-bar--hijacked');
+
+    if (hijackedVolumeBar !== null) {
         return;
     }
 
@@ -280,8 +286,10 @@ function hijackVolumeControl() {
     volumeBar.appendChild(input);
     volumeBar.classList.add('volume-bar', 'volume-bar--hijacked');
 
-    document.querySelector('.volume-bar').parentNode.appendChild(volumeBar);
-    document.querySelector('.volume-bar').style.display = 'none';
+    const volumeBarElement = document.querySelector('.volume-bar');
+
+    volumeBarElement.parentNode.appendChild(volumeBar);
+    volumeBarElement.style.display = 'none';
 }
 
 // remove custom volume control and show old one again
@@ -292,7 +300,9 @@ function releaseVolumeControl() {
         volumeBar.parentNode.removeChild(volumeBar);
     }
 
-    document.querySelector('.volume-bar').style.display = '';
+    const regularVolumeBar = document.querySelector('.volume-bar');
+
+    regularVolumeBar.style.display = '';
 }
 
 chrome.runtime.onMessage.addListener(
@@ -338,9 +348,12 @@ chrome.runtime.onMessage.addListener(
 );
 
 function play() {
-    const el = document.querySelector('.control-button.spoticon-play-16');
-    if (el) {
-        el.click();
+    const playButton = document.querySelector(
+        '.control-button.spoticon-play-16'
+    );
+
+    if (playButton) {
+        playButton.click();
         return true;
     }
 
@@ -348,9 +361,12 @@ function play() {
 }
 
 function pause() {
-    const el = document.querySelector('.control-button.spoticon-pause-16');
-    if (el) {
-        el.click();
+    const pauseButton = document.querySelector(
+        '.control-button.spoticon-pause-16'
+    );
+
+    if (pauseButton) {
+        pauseButton.click();
         return true;
     }
 
@@ -358,9 +374,12 @@ function pause() {
 }
 
 function skipBack() {
-    const el = document.querySelector('.control-button.spoticon-skip-back-16');
-    if (el) {
-        el.click();
+    const skipBackButton = document.querySelector(
+        '.control-button.spoticon-skip-back-16'
+    );
+
+    if (skipBackButton) {
+        skipBackButton.click();
         return true;
     }
 
