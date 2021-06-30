@@ -1,3 +1,5 @@
+import './inject';
+
 let trackTimeout;
 
 // handle player play event
