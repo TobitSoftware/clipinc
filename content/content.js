@@ -196,10 +196,10 @@ function getLocalTrackInfo() {
     const isPremium = document.querySelector('.AdsContainer') === null;
 
     const title = document.querySelector(
-        'a[data-testid="nowplaying-track-link"]'
+        '[data-testid="context-item-info-title"]'
     ).textContent;
     const artist = document.querySelector(
-        'a[data-testid="nowplaying-artist"]'
+        '[data-testid="context-item-info-subtitles"]'
     ).textContent;
 
     const duration =
