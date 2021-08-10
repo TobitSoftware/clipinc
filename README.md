@@ -79,3 +79,6 @@ and reload the extension to pick up your changes.
 
 If you think you have any ideas that could benefit the project, feel free to
 create an issue or pull request!
+
+Check out our [contribution guide](./CONTRIBUTING.md) on how to initialize the
+project on your machine, fix bugs and publish a new version.
