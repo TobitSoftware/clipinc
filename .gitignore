@@ -7,3 +7,4 @@ build.zip
 src/manifest\.json
 dist/
 .DS_Store
+update.zip
