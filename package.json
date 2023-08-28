@@ -15,7 +15,6 @@
         "format": "prettier . --write",
         "format-staged": "pretty-quick --staged",
         "lint": "eslint . --ignore-path .gitignore",
-        "prepare": "husky install && shx rm -rf .git/hooks && shx ln -s ../.husky .git/hooks",
         "test": "jest"
     },
     "dependencies": {
