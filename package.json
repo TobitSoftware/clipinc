@@ -1,6 +1,6 @@
 {
     "name": "clipinc",
-    "version": "1.12.6",
+    "version": "1.12.7",
     "description": "clipinc chrome browser extension to record spotify songs",
     "repository": {
         "type": "git",
@@ -13,9 +13,9 @@
         "build": "rimraf dist/ update.zip && webpack && node scripts/bundle",
         "dev-build": "webpack --env development",
         "format": "prettier . --write",
-        "prepare": "husky install && shx rm -rf .git/hooks && shx ln -s ../.husky .git/hooks",
         "format-staged": "pretty-quick --staged",
         "lint": "eslint . --ignore-path .gitignore",
+        "prepare": "husky install && shx rm -rf .git/hooks && shx ln -s ../.husky .git/hooks",
         "test": "jest"
     },
     "dependencies": {
