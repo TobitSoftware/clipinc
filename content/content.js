@@ -288,7 +288,7 @@ function hijackVolumeControl() {
     volumeBar.appendChild(input);
     volumeBar.classList.add('volume-bar', 'volume-bar--hijacked');
 
-    const volumeBarElement = document.querySelector('.volume-bar');
+    const volumeBarElement = document.querySelector('.control-button[aria-describedby="volume-icon"]');
 
     volumeBarElement.parentNode.appendChild(volumeBar);
     volumeBarElement.style.display = 'none';
