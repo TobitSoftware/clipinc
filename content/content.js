@@ -290,8 +290,12 @@ function hijackVolumeControl() {
 
     const volumeBarElement = document.querySelector('.control-button[aria-describedby="volume-icon"]');
 
-    volumeBarElement.parentNode.appendChild(volumeBar);
-    volumeBarElement.style.display = 'none';
+    if (volumeBarElement) {
+        volumeBarElement.parentNode.appendChild(volumeBar);
+        volumeBarElement.style.display = 'none';
+    } else {
+        console.error('could not hijack volume control');
+    }
 }
 
 // remove custom volume control and show old one again
