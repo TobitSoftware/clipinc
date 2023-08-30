@@ -253,7 +253,7 @@ function getIsLocalDevice() {
 
 // get current volume from dom
 function getVolume() {
-    const v = JSON.parse(localStorage.getItem('playback')).volume;
+    const v = JSON.parse(localStorage.getItem('playback') || '{"volume":1}').volume;
     return Math.max(0, Math.min(1, v * v * v));
 }
 
@@ -278,7 +278,7 @@ function hijackVolumeControl() {
     input.min = 0;
     input.max = 1;
     input.step = 0.01;
-    input.value = JSON.parse(localStorage.getItem('playback')).volume.toFixed(
+    input.value = JSON.parse(localStorage.getItem('playback') || '{"volume":1}').volume.toFixed(
         2
     );
     input.classList.add('slider');
