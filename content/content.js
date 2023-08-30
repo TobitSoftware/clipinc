@@ -306,7 +306,7 @@ function releaseVolumeControl() {
         volumeBar.parentNode.removeChild(volumeBar);
     }
 
-    const regularVolumeBar = document.querySelector('.volume-bar');
+    const regularVolumeBar = document.querySelector('.control-button[aria-describedby="volume-icon"]');
 
     regularVolumeBar.style.display = '';
 }
