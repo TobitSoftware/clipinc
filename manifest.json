@@ -39,6 +39,6 @@
         "downloads.shelf",
         "notifications"
     ],
-    "version": "1.12.10",
+    "version": "1.12.11",
     "web_accessible_resources": ["content/inject.js"]
 }
