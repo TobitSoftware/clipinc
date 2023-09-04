@@ -355,10 +355,11 @@ chrome.runtime.onMessage.addListener(
 
 function play() {
     const playButton = document.querySelector(
-        '.control-button.spoticon-play-16'
+        '.player-controls__buttons>[data-testid="control-button-playpause"]'
     );
 
-    if (playButton) {
+    //  Check whether play/pause button currently shows play or pause icon
+    if (playButton && playButton.querySelector('path[d="M3 1.713a.7.7 0 0 1 1.05-.607l10.89 6.288a.7.7 0 0 1 0 1.212L4.05 14.894A.7.7 0 0 1 3 14.288V1.713z"]')) {
         playButton.click();
         return true;
     }
@@ -368,7 +369,7 @@ function play() {
 
 function pause() {
     const pauseButton = document.querySelector(
-        '.control-button.spoticon-pause-16'
+        '.player-controls__buttons>[data-testid="control-button-playpause"]'
     );
 
     if (pauseButton) {
@@ -381,7 +382,7 @@ function pause() {
 
 function skipBack() {
     const skipBackButton = document.querySelector(
-        '.control-button.spoticon-skip-back-16'
+        '.player-controls__buttons [data-testid="control-button-skip-back"]'
     );
 
     if (skipBackButton) {
