@@ -1,7 +1,0 @@
-{
-    "extends": ["react-app", "react-app/jest"],
-    "env": {
-        "webextensions": true
-    },
-    "ignorePatterns": ["background-page/encoders/*"]
-}

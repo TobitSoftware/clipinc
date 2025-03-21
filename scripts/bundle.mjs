@@ -1,8 +1,8 @@
-const archiver = require('archiver');
-const fs = require('fs');
-const path = require('path');
+import archiver from 'archiver';
+import { createWriteStream } from 'fs';
+import path from 'node:path';
 
-const output = fs.createWriteStream(path.resolve('update.zip'));
+const output = createWriteStream(path.resolve('update.zip'));
 const archive = archiver('zip');
 
 output.on('close', () => {
