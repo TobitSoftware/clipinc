@@ -30,9 +30,11 @@
     "dependencies": {
         "react": "^19.0.0",
         "react-dom": "^19.0.0",
-        "styled-components": "^6.1.16"
+        "styled-components": "^6.1.16",
+        "webm-muxer": "^5.1.0"
     },
     "devDependencies": {
+        "@types/chrome": "^0.0.310",
         "@types/jest": "^29.5.14",
         "@types/react": "^19.0.12",
         "@types/react-dom": "^19.0.4",

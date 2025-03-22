@@ -14,8 +14,15 @@ export default buildToolkitConfig({
                 pathIndex: './src/background-page/index',
                 pathHtml: './src/background-page/index.html',
             },
+            'background/index': {
+                pathIndex: './src/background/index',
+            },
             'content/content': {
-                pathIndex: './src/content/content',
+                pathIndex: './src/content/index',
+            },
+            'offscreen/index': {
+                pathIndex: './src/offscreen/index',
+                pathHtml: './src/offscreen/index.html',
             },
             'popup/index': {
                 pathIndex: './src/popup/index',
@@ -30,17 +37,19 @@ export default buildToolkitConfig({
         config.output ??= {};
         config.output.target = 'web-worker';
 
-        config.output.copy = [{
-            from: './chrome',
-            transform: (content, absoluteFilename) => {
-                if (!absoluteFilename.endsWith(`${path.sep}manifest.json`)) return content;
-                const text = content.toString('utf-8');
-                const json = JSON.parse(text);
-                json.version = packageJson.version;
+        config.output.copy = [
+            {
+                from: './chrome',
+                transform: (content, absoluteFilename) => {
+                    if (!absoluteFilename.endsWith(`${path.sep}manifest.json`)) return content;
+                    const text = content.toString('utf-8');
+                    const json = JSON.parse(text);
+                    json.version = packageJson.version;
 
-                return `${JSON.stringify(json, undefined, 4)}\n`;
-            }
-        }];
+                    return `${JSON.stringify(json, undefined, 4)}\n`;
+                },
+            },
+        ];
 
         const defaultJsFileName = config.output.filename?.js;
         config.output.filename ??= {};

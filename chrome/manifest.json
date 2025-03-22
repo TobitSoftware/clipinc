@@ -1,10 +1,12 @@
 {
     "author": "Tobit.Software",
     "background": {
-        "page": "background-page/index.html",
-        "persistent": true
+        "service_worker": "static/js/background/index.js",
+        "scripts": [
+            "static/js/background/index.js"
+        ]
     },
-    "browser_action": {
+    "action": {
         "default_icon": {
             "16": "images/clipinc-16.png",
             "32": "images/clipinc-32.png",
@@ -27,7 +29,7 @@
         "48": "images/clipinc-48.png",
         "128": "images/clipinc-128.png"
     },
-    "manifest_version": 2,
+    "manifest_version": 3,
     "name": "__MSG_name__",
     "permissions": [
         "tabs",
@@ -36,8 +38,12 @@
         "storage",
         "downloads",
         "downloads.shelf",
-        "notifications"
+        "notifications",
+        "offscreen"
     ],
     "version": "1.12.12",
-    "web_accessible_resources": ["static/js/content/inject.js"]
+    "web_accessible_resources": [{
+        "resources": ["static/js/content/inject.js"],
+        "matches": ["https://open.spotify.com/*"]
+    }]
 }
