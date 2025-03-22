@@ -1,9 +1,9 @@
 import { RecordManager } from './recordManager';
 
-const recorder = new RecordManager();
+const recordManager = new RecordManager();
 // @ts-expect-error only for debugging
 // eslint-disable-next-line no-restricted-globals
-self.recorder = recorder;
+self.recordManager = recordManager;
 
 chrome.runtime.onMessage.addListener(
     (
@@ -12,29 +12,36 @@ chrome.runtime.onMessage.addListener(
             target: string;
             data: unknown;
         },
-        sender,
-        sendResponse,
     ) => {
         if (request.target !== 'offscreen') return;
         console.log('[offscreen] message received', request);
         switch (request.command) {
             case 'startRecording': {
                 const { streamId, volume } = request.data as { streamId: string; volume: number };
-                void recorder.start(streamId, volume);
+                void recordManager.start(streamId, volume);
                 break;
             }
-            case 'saveFile': {
+            case 'trackStarted': {
                 const { filename } = request.data as { filename: string };
-                recorder.save(filename);
+                recordManager.startTrack(filename);
                 break;
             }
+            case 'trackPaused':
+                recordManager.pauseRecording();
+                break;
+            case 'trackResumed':
+                recordManager.resumeRecording();
+                break;
+            case 'trackEnded':
+                recordManager.finishTrack();
+                break;
             case 'setVolume': {
                 const { volume } = request.data as { volume: number };
-                recorder.setVolume(volume);
+                recordManager.setVolume(volume);
                 break;
             }
             case 'stopRecording':
-                recorder.stop();
+                recordManager.stop();
                 break;
             default:
                 break;

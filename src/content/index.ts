@@ -1,4 +1,11 @@
-import { getNowPlayingWidget, getPlayButton, getPreviousButton, getTrackInfo, getVolume } from './utils/selectors';
+import { hijackVolumeControl, releaseVolumeControl } from './components/VolumeSlider';
+import {
+    getNowPlayingWidget,
+    getPlayButton,
+    getPreviousButton,
+    getTrackInfo,
+    getVolume,
+} from './utils/selectors';
 
 let lastTrackInfo: ReturnType<typeof getTrackInfo> | null = null;
 
@@ -20,7 +27,12 @@ chrome.runtime.onMessage.addListener((request: { command: string, data: unknown 
     switch (request.command) {
         case 'prepareRecording': {
             const volume = getVolume();
-            sendResponse({ volume });
+            if (volume !== 1) {
+                sendResponse({ error: new Error('volume has to be 100%')});
+            } else {
+                sendResponse({ volume });
+                hijackVolumeControl();
+            }
             break;
         }
         case 'startRecording':
@@ -37,6 +49,8 @@ chrome.runtime.onMessage.addListener((request: { command: string, data: unknown 
             const { volume } = request.data as { volume: number };
 
             mutationObserver.disconnect();
+
+            releaseVolumeControl();
 
             break;
         }

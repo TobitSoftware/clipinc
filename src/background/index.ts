@@ -26,11 +26,11 @@ const handleMessage = (
             reset();
             break;
         case 'downloadFile': {
-            const { url, fileName } = data as { url: string, fileName: string };
+            const { url, filename } = data as { url: string, filename: string };
 
             void chrome.downloads.download({
                 url,
-                filename: fileName,
+                filename,
             });
             break;
         }

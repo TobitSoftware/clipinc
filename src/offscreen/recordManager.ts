@@ -38,15 +38,6 @@ export class RecordManager {
         this.recorder.start();
     };
 
-    save = (filename: string) => {
-        if (this.isRecording()) {
-            this.recorder.setFilename(filename)
-            this.recorder.stop();
-            this.recorder = new Recorder(this.mediaStream);
-            this.recorder.start();
-        }
-    };
-
     stop = () => {
         if (this.isRecording()) {
             this.recorder.cancel();
@@ -59,6 +50,35 @@ export class RecordManager {
     setVolume = (volume: number) => {
         if (this.isRecording()) {
             this.gainNode.gain.value = volume;
+        }
+    }
+
+    startTrack = (filename: string) => {
+        if (this.isRecording()) {
+            this.recorder.cancel();
+            this.recorder = new Recorder(this.mediaStream);
+            this.recorder.setFilename(filename);
+            this.recorder.start();
+        }
+    }
+
+    finishTrack = () => {
+        if (this.isRecording()) {
+            this.recorder.stop();
+            this.recorder = new Recorder(this.mediaStream);
+            this.recorder.start();
+        }
+    }
+
+    pauseRecording = () => {
+        if (this.isRecording()) {
+            this.recorder.mediaRecorder.pause();
+        }
+    }
+
+    resumeRecording = () => {
+        if (this.isRecording()) {
+            this.recorder.mediaRecorder.resume();
         }
     }
 }
