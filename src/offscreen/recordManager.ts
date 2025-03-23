@@ -33,7 +33,7 @@ export class RecordManager {
         const source = output.createMediaStreamSource(mediaStream);
         source.connect(gainNode);
         gainNode.connect(output.destination);
-        gainNode.gain.value = volume;
+        gainNode.gain.value = volume ** 3;
 
         this.mediaStream = mediaStream;
         this.recorder = new Recorder(mediaStream);
@@ -43,6 +43,7 @@ export class RecordManager {
     stop = () => {
         if (this.isRecording()) {
             this.recorder.cancel();
+            this.mediaStream?.getAudioTracks().forEach(track => track.stop());
         }
         this.gainNode = null;
         this.recorder = null;
@@ -58,7 +59,7 @@ export class RecordManager {
 
     setVolume = (volume: number) => {
         if (this.isRecording()) {
-            this.gainNode.gain.value = volume;
+            this.gainNode.gain.value = volume ** 3;
         }
     }
 

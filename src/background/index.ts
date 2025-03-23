@@ -5,6 +5,14 @@ import { resetStorage } from './utils/storage';
 import MessageSender = chrome.runtime.MessageSender;
 import TabChangeInfo = chrome.tabs.TabChangeInfo;
 
+void chrome.storage.session.setAccessLevel({
+    accessLevel: 'TRUSTED_AND_UNTRUSTED_CONTEXTS',
+});
+
+chrome.runtime.onStartup.addListener(() => {
+    void chrome.storage.local.clear();
+});
+
 const handleMessage = (
     {
         command,
@@ -25,8 +33,15 @@ const handleMessage = (
             );
             break;
         case 'stopCapture':
+            void chrome.runtime.sendMessage({
+                command: 'stopRecording',
+                target: 'offscreen',
+            })
             chrome.storage.session.get(['volume'], ({ volume }) => {
                 void setVolume(Number(volume) ?? 1);
+            });
+            void chrome.storage.session.set({
+                isRecording: false,
             });
             reset();
             break;
@@ -36,6 +51,10 @@ const handleMessage = (
             void chrome.downloads.download({
                 url,
                 filename,
+            });
+            chrome.storage.local.get(['songCount'], ({ songCount }) => {
+                const oldSongCount = (songCount || 0) as number;
+                void chrome.storage.local.set({ songCount: oldSongCount + 1 });
             });
             break;
         }

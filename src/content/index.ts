@@ -18,6 +18,11 @@ const mutationObserver = new MutationObserver(() => {
             filename,
         },
     });
+    void chrome.storage.session.set({
+        title: trackInfo.title,
+        subTitle: trackInfo.subTitle,
+        coverSrc: trackInfo.coverImageUrl,
+    });
 })
 
 chrome.runtime.onMessage.addListener((request: { command: string, data: unknown }, sender, sendResponse) => {
@@ -43,6 +48,11 @@ chrome.runtime.onMessage.addListener((request: { command: string, data: unknown 
                     filename,
                 }
             });
+            void chrome.storage.session.set({
+                title: trackInfo.title,
+                subTitle: trackInfo.subTitle,
+                coverSrc: trackInfo.coverImageUrl,
+            });
 
             mutationObserver.observe(getNowPlayingWidget() as Element, { attributes: true });
 
@@ -60,5 +70,15 @@ chrome.runtime.onMessage.addListener((request: { command: string, data: unknown 
         }
         default:
             break;
+    }
+});
+
+chrome.storage.session.onChanged.addListener((change) => {
+    if ('isRecording' in change) {
+        if (change.isRecording.newValue === false) {
+            mutationObserver.disconnect();
+
+            releaseVolumeControl();
+        }
     }
 });

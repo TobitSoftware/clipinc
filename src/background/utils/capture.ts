@@ -1,5 +1,6 @@
 import ContextType = chrome.runtime.ContextType;
 import Reason = chrome.offscreen.Reason;
+import { setRecordingIcon } from './icon';
 import { setVolume } from './setVolume';
 
 type PrepareRecordingMessage = { command: 'prepareRecording' };
@@ -52,6 +53,10 @@ export const startCapture = async () => {
         });
         void chrome.tabs.sendMessage(tabId, {
             command: 'startRecording',
+        });
+        setRecordingIcon();
+        void chrome.storage.session.set({
+            isRecording: true
         })
     });
 };

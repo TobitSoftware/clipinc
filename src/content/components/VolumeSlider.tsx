@@ -46,11 +46,11 @@ export const hijackVolumeControl = (initialValue: number) => {
 }
 
 export const releaseVolumeControl = () => {
+    unmountVolumeSlider();
+    volumeSliderWrapper?.remove();
+    volumeSliderWrapper = null;
     const $volumeBar = getVolumeBar();
     if ($volumeBar) {
-        unmountVolumeSlider();
-        volumeSliderWrapper?.remove();
-        volumeSliderWrapper = null;
         $volumeBar.style.display = '';
     }
 }
