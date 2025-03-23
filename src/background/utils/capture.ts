@@ -1,5 +1,6 @@
 import ContextType = chrome.runtime.ContextType;
 import Reason = chrome.offscreen.Reason;
+import { setVolume } from './setVolume';
 
 type PrepareRecordingMessage = { command: 'prepareRecording' };
 type PrepareRecordingResponse = { error?: Error; volume?: number };
@@ -39,6 +40,9 @@ export const startCapture = async () => {
             justification: 'Recording from chrome.tabCapture API',
         });
     }
+
+    void chrome.storage.session.set({ volume: response?.volume ?? 1 });
+    void setVolume(1);
 
     chrome.tabCapture.getMediaStreamId({ targetTabId: tab.id }, (streamId) => {
         void chrome.runtime.sendMessage({

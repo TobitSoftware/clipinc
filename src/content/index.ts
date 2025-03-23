@@ -7,19 +7,17 @@ import {
     getVolume,
 } from './utils/selectors';
 
-let lastTrackInfo: ReturnType<typeof getTrackInfo> | null = null;
-
 const mutationObserver = new MutationObserver(() => {
-    console.log('mutationObserver', lastTrackInfo);
-    const filename = lastTrackInfo ? `${lastTrackInfo.title} - ${lastTrackInfo.subTitle}.m4a`: null;
+    const trackInfo = getTrackInfo();
+
+    const filename = trackInfo.title || trackInfo.subTitle ? `${trackInfo.title} - ${trackInfo.subTitle}.m4a`: null;
     void chrome.runtime.sendMessage({
-        command: 'saveFile',
+        command: 'setFilename',
+        target: 'offscreen',
         data: {
             filename,
         },
-        target: 'offscreen',
     });
-    lastTrackInfo = getTrackInfo();
 })
 
 chrome.runtime.onMessage.addListener((request: { command: string, data: unknown }, sender, sendResponse) => {
@@ -27,23 +25,29 @@ chrome.runtime.onMessage.addListener((request: { command: string, data: unknown 
     switch (request.command) {
         case 'prepareRecording': {
             const volume = getVolume();
-            if (volume !== 1) {
-                sendResponse({ error: new Error('volume has to be 100%')});
-            } else {
-                sendResponse({ volume });
-                hijackVolumeControl();
-            }
+            sendResponse({ volume });
+            hijackVolumeControl(volume);
             break;
         }
-        case 'startRecording':
+        case 'startRecording': {
             getPreviousButton()?.click();
             getPlayButton()?.click();
 
-            lastTrackInfo = getTrackInfo();
+            const trackInfo = getTrackInfo();
+            const filename = trackInfo.title || trackInfo.subTitle ? `${trackInfo.title} - ${trackInfo.subTitle}.m4a`: null;
+
+            void chrome.runtime.sendMessage({
+                command: 'setFilename',
+                target: 'offscreen',
+                data: {
+                    filename,
+                }
+            });
 
             mutationObserver.observe(getNowPlayingWidget() as Element, { attributes: true });
 
             break;
+        }
         case 'stopRecording': {
             // TODO: release volume control and set volume
             const { volume } = request.data as { volume: number };

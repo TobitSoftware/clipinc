@@ -7,6 +7,8 @@ export class RecordManager {
 
     gainNode: GainNode | null = null;
 
+    filename: string | null = null;
+
     isRecording(): this is RecordManager & { mediaStream: MediaStream; recorder: Recorder, gainNode: GainNode } {
         return !!this.recorder;
     }
@@ -47,23 +49,33 @@ export class RecordManager {
         this.mediaStream = null;
     };
 
+    setFilename = (filename: string) => {
+        this.filename = filename;
+        if (this.isRecording()) {
+            this.recorder.setFilename(filename);
+        }
+    }
+
     setVolume = (volume: number) => {
         if (this.isRecording()) {
             this.gainNode.gain.value = volume;
         }
     }
 
-    startTrack = (filename: string) => {
+    startTrack = () => {
         if (this.isRecording()) {
             this.recorder.cancel();
             this.recorder = new Recorder(this.mediaStream);
-            this.recorder.setFilename(filename);
             this.recorder.start();
         }
     }
 
     finishTrack = () => {
         if (this.isRecording()) {
+            if (this.filename) {
+                this.recorder.setFilename(this.filename);
+                this.filename = null;
+            }
             this.recorder.stop();
             this.recorder = new Recorder(this.mediaStream);
             this.recorder.start();

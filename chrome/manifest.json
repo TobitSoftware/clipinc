@@ -39,7 +39,11 @@
         "downloads",
         "downloads.shelf",
         "notifications",
-        "offscreen"
+        "offscreen",
+        "webRequest"
+    ],
+    "host_permissions": [
+        "https://*.spotify.com/*"
     ],
     "version": "1.12.12",
     "web_accessible_resources": [{

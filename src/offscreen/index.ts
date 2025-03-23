@@ -22,8 +22,7 @@ chrome.runtime.onMessage.addListener(
                 break;
             }
             case 'trackStarted': {
-                const { filename } = request.data as { filename: string };
-                recordManager.startTrack(filename);
+                recordManager.startTrack();
                 break;
             }
             case 'trackPaused':
@@ -35,6 +34,11 @@ chrome.runtime.onMessage.addListener(
             case 'trackEnded':
                 recordManager.finishTrack();
                 break;
+            case 'setFilename': {
+                const { filename } = request.data as { filename: string };
+                recordManager.setFilename(filename);
+                break;
+            }
             case 'setVolume': {
                 const { volume } = request.data as { volume: number };
                 recordManager.setVolume(volume);

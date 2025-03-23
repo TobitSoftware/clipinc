@@ -6,7 +6,7 @@ import { StyledVolumeSlider } from './VolumeSlider.styles';
 let volumeSliderWrapper: HTMLElement | null = null;
 let root: Root | null = null;
 
-const renderVolumeSlider = ($root: HTMLElement) => {
+const renderVolumeSlider = ($root: HTMLElement, initialValue: number) => {
     root = createRoot($root);
     root.render(
         <StyledVolumeSlider
@@ -14,7 +14,7 @@ const renderVolumeSlider = ($root: HTMLElement) => {
             min={0}
             max={1}
             step={0.01}
-            defaultValue={1}
+            defaultValue={initialValue}
             onChange={(ev) => {
                 void chrome.runtime.sendMessage({
                     command: 'setVolume',
@@ -33,14 +33,14 @@ const unmountVolumeSlider = () => {
     root = null;
 };
 
-export const hijackVolumeControl = () => {
+export const hijackVolumeControl = (initialValue: number) => {
     const $volumeBar = getVolumeBar();
     if ($volumeBar) {
         $volumeBar.style.display = 'none';
         const $root = document.createElement('div');
         $root.classList.add('clipinc-volume-slider-wrapper');
         volumeSliderWrapper = $root;
-        renderVolumeSlider($root);
+        renderVolumeSlider($root, initialValue);
         $volumeBar.insertAdjacentElement('beforebegin', $root);
     }
 }
