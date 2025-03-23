@@ -10,7 +10,7 @@ import {
 const mutationObserver = new MutationObserver(() => {
     const trackInfo = getTrackInfo();
 
-    const filename = trackInfo.title || trackInfo.subTitle ? `${trackInfo.title} - ${trackInfo.subTitle}.m4a`: null;
+    const filename = trackInfo.title || trackInfo.subTitle ? `${trackInfo.title} - ${trackInfo.subTitle}.mp4`: null;
     void chrome.runtime.sendMessage({
         command: 'setFilename',
         target: 'offscreen',
@@ -34,7 +34,7 @@ chrome.runtime.onMessage.addListener((request: { command: string, data: unknown 
             getPlayButton()?.click();
 
             const trackInfo = getTrackInfo();
-            const filename = trackInfo.title || trackInfo.subTitle ? `${trackInfo.title} - ${trackInfo.subTitle}.m4a`: null;
+            const filename = trackInfo.title || trackInfo.subTitle ? `${trackInfo.title} - ${trackInfo.subTitle}.mp4`: null;
 
             void chrome.runtime.sendMessage({
                 command: 'setFilename',

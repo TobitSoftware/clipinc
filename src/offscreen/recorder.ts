@@ -1,4 +1,4 @@
-import { ArrayBufferTarget, Muxer } from 'webm-muxer';
+import { ArrayBufferTarget, Muxer } from 'mp4-muxer';
 
 export class Recorder {
     chunks: Blob[] = [];
@@ -37,11 +37,12 @@ export class Recorder {
 
         const muxer = new Muxer({
             audio: {
-                codec: 'A_OPUS',
+                codec: 'aac',
                 numberOfChannels: audioBuffer.numberOfChannels,
                 sampleRate: audioBuffer.sampleRate,
             },
             target,
+            fastStart: 'in-memory'
         });
 
         const encoder = new AudioEncoder({
@@ -50,7 +51,7 @@ export class Recorder {
         });
 
         encoder.configure({
-            codec: 'opus',
+            codec: 'mp4a.40.2',
             sampleRate: audioBuffer.sampleRate,
             numberOfChannels: audioBuffer.numberOfChannels,
         });

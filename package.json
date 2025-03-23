@@ -28,10 +28,10 @@
         "extends": "@chayns-toolkit"
     },
     "dependencies": {
+        "mp4-muxer": "^5.2.0",
         "react": "^19.0.0",
         "react-dom": "^19.0.0",
-        "styled-components": "^6.1.16",
-        "webm-muxer": "^5.1.0"
+        "styled-components": "^6.1.16"
     },
     "devDependencies": {
         "@types/chrome": "^0.0.310",
