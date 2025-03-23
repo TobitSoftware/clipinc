@@ -13,5 +13,17 @@
     },
     "notificationStop": {
         "message": "Die Aufnahme wurde abgebrochen."
+    },
+    "intro_explanation": {
+        "message": "Öffne Spotify und melde Dich mit Deinem Konto an."
+    },
+    "intro_openSpotify": {
+        "message": "Spotify öffnen"
+    },
+    "intro_disclaimer": {
+        "message": "Diese ##link## ist ein Experiment. Eine dauerhafte Funktion kann nicht garantiert werden."
+    },
+    "intro_disclaimerLink": {
+        "message": "Open-Source-Software"
     }
 }

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { IntroScreen } from './intro-screen/IntroScreen';
+import IntroScreen from './intro-screen/IntroScreen';
 import placeholderSrc from './placeholder.png';
 import { Recorder } from './recording-screen/Recorder';
 
