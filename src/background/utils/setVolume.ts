@@ -1,11 +1,7 @@
-type SessionState = {
-    authorization?: string;
-    clientToken?: string;
-    deviceId?: string;
-};
+import { ClipincStorageState } from '../../types/storage';
 
 export const setVolume = async (volume: number) => {
-    const { authorization, clientToken, deviceId } = await new Promise<SessionState>((resolve) => {
+    const { authorization, clientToken, deviceId } = await new Promise<ClipincStorageState>((resolve) => {
         chrome.storage.session.get(['deviceId', 'authorization', 'clientToken'], (result) =>
             resolve(result),
         );

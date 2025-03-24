@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import StorageChange = chrome.storage.StorageChange;
+import { ClipincStorageChange, ClipincStorageState } from '../../types/storage';
 
 export const useRecordingState = () => {
     const [isSpotifyTab, setIsSpotifyTab] = useState(false);
@@ -22,7 +22,7 @@ export const useRecordingState = () => {
     }, []);
 
     useEffect(() => {
-        chrome.storage.session.get(['isRecording', 'title', 'subTitle', 'coverSrc', 'progress', 'songCount'], (result) => {
+        chrome.storage.session.get<ClipincStorageState>(['isRecording', 'title', 'subTitle', 'coverSrc', 'progress', 'songCount'], (result) => {
             setIsRecording(result.isRecording ?? false);
             setTitle(result.title ?? '');
             setArtist(result.subTitle ?? '');
@@ -31,23 +31,23 @@ export const useRecordingState = () => {
             setSongCount(result.songCount ?? 0);
         });
 
-        const listener = (change: StorageChange) => {
-            if ('isRecording' in change) {
+        const listener = (change: ClipincStorageChange) => {
+            if (change.isRecording) {
                 setIsRecording(change.isRecording.newValue ?? false);
             }
-            if ('title' in change) {
+            if (change.title) {
                 setTitle(change.title.newValue ?? '');
             }
-            if ('subTitle' in change) {
+            if (change.subTitle) {
                 setArtist(change.subTitle.newValue ?? '');
             }
-            if ('coverSrc' in change) {
+            if (change.coverSrc) {
                 setCoverSrc(change.coverSrc.newValue ?? '');
             }
-            if ('progress' in change) {
+            if (change.progress) {
                 setProgress(change.progress.newValue ?? 0);
             }
-            if ('songCount' in change) {
+            if (change.songCount) {
                 setSongCount(change.songCount.newValue ?? 0);
             }
         }
