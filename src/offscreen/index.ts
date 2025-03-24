@@ -14,7 +14,7 @@ chrome.runtime.onMessage.addListener(
         },
     ) => {
         if (request.target !== 'offscreen') return;
-        console.log('[offscreen] message received', request);
+        console.debug('[clipinc] offscreen script received message:', request);
         switch (request.command) {
             case 'startRecording': {
                 const { streamId, volume } = request.data as { streamId: string; volume: number };

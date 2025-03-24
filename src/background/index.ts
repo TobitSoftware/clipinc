@@ -1,16 +1,10 @@
 import { startCapture } from './utils/capture';
 import { reset } from './utils/reset';
-import { setVolume } from './utils/setVolume';
-import { resetStorage } from './utils/storage';
 import MessageSender = chrome.runtime.MessageSender;
 import TabChangeInfo = chrome.tabs.TabChangeInfo;
 
 void chrome.storage.session.setAccessLevel({
     accessLevel: 'TRUSTED_AND_UNTRUSTED_CONTEXTS',
-});
-
-chrome.runtime.onStartup.addListener(() => {
-    void chrome.storage.local.clear();
 });
 
 const handleMessage = (
@@ -24,7 +18,7 @@ const handleMessage = (
     _sender: MessageSender,
     sendResponse: (response?: unknown) => void,
 ) => {
-    console.log('received message', command, data);
+    console.debug('[clipinc] background script received message:', command, data);
     switch (command) {
         case 'startCapture':
             startCapture().then(
@@ -33,16 +27,6 @@ const handleMessage = (
             );
             break;
         case 'stopCapture':
-            void chrome.runtime.sendMessage({
-                command: 'stopRecording',
-                target: 'offscreen',
-            });
-            chrome.storage.session.get(['volume'], ({ volume }) => {
-                void setVolume(Number(volume) ?? 1);
-            });
-            void chrome.storage.session.set({
-                isRecording: false,
-            });
             reset();
             break;
         case 'downloadFile': {
@@ -52,9 +36,9 @@ const handleMessage = (
                 url,
                 filename: `clipinc/${filename}`,
             });
-            chrome.storage.local.get(['songCount'], ({ songCount }) => {
+            chrome.storage.session.get(['songCount'], ({ songCount }) => {
                 const oldSongCount = (songCount || 0) as number;
-                void chrome.storage.local.set({ songCount: oldSongCount + 1 });
+                void chrome.storage.session.set({ songCount: oldSongCount + 1 });
             });
             break;
         }
@@ -69,8 +53,7 @@ const handleMessage = (
 };
 
 const handleTabRemove = (id: number) => {
-    chrome.storage.local.get(['tabId'], ({ tabId }) => {
-        // delete storage if the tab that was recorded is closed
+    chrome.storage.session.get(['tabId'], ({ tabId }) => {
         if (tabId && id === tabId) {
             reset();
         }
@@ -78,18 +61,13 @@ const handleTabRemove = (id: number) => {
 };
 
 const handleTabUpdate = (id: number, changeInfo: TabChangeInfo) => {
-    chrome.storage.local.get(['tabId'], ({ tabId }) => {
+    chrome.storage.session.get(['tabId'], ({ tabId }) => {
         if (tabId === id && changeInfo.status === 'loading') {
-            void chrome.runtime.sendMessage({
-                command: 'stopRecording',
-                target: 'offscreen',
-            });
+            reset();
         }
     });
 };
 
-chrome.runtime.onInstalled.addListener(resetStorage);
-chrome.runtime.onStartup.addListener(resetStorage);
 chrome.tabs.onRemoved.addListener(handleTabRemove);
 chrome.runtime.onMessage.addListener(handleMessage);
 chrome.tabs.onUpdated.addListener(handleTabUpdate);
@@ -173,10 +151,11 @@ chrome.downloads.onChanged.addListener((downloadDelta) => {
                 void chrome.downloads.erase({
                     id: downloadItem.id,
                 });
+                const filename = downloadItem.filename.split(/[/\\]/).pop() as string;
                 chrome.notifications.create({
                     type: 'basic',
                     title: chrome.i18n.getMessage('name'),
-                    message: chrome.i18n.getMessage('notificationDownloaded', [downloadItem.filename]),
+                    message: chrome.i18n.getMessage('notificationDownloaded', [filename]),
                     iconUrl: '/images/clipinc-128.png',
                 });
             }

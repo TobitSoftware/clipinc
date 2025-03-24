@@ -1,5 +1,7 @@
 import { Recorder } from './recorder';
 
+const convertVolumeToGain = (volume: number) => volume ** 3;
+
 export class RecordManager {
     mediaStream: MediaStream | null = null;
 
@@ -33,7 +35,7 @@ export class RecordManager {
         const source = output.createMediaStreamSource(mediaStream);
         source.connect(gainNode);
         gainNode.connect(output.destination);
-        gainNode.gain.value = volume ** 3;
+        gainNode.gain.value = convertVolumeToGain(volume);
 
         this.mediaStream = mediaStream;
         this.recorder = new Recorder(mediaStream);
@@ -59,7 +61,7 @@ export class RecordManager {
 
     setVolume = (volume: number) => {
         if (this.isRecording()) {
-            this.gainNode.gain.value = volume ** 3;
+            this.gainNode.gain.value = convertVolumeToGain(volume);
         }
     }
 
@@ -75,7 +77,6 @@ export class RecordManager {
         if (this.isRecording()) {
             if (this.filename) {
                 this.recorder.setFilename(this.filename);
-                this.filename = null;
             }
             this.recorder.stop();
             this.recorder = new Recorder(this.mediaStream);

@@ -26,7 +26,7 @@ const mutationObserver = new MutationObserver(() => {
 })
 
 chrome.runtime.onMessage.addListener((request: { command: string, data: unknown }, sender, sendResponse) => {
-    console.log('[content] received message', request);
+    console.debug('[clipinc] content script received message:', request);
     switch (request.command) {
         case 'prepareRecording': {
             const volume = getVolume();
@@ -55,16 +55,6 @@ chrome.runtime.onMessage.addListener((request: { command: string, data: unknown 
             });
 
             mutationObserver.observe(getNowPlayingWidget() as Element, { attributes: true });
-
-            break;
-        }
-        case 'stopRecording': {
-            // TODO: release volume control and set volume
-            const { volume } = request.data as { volume: number };
-
-            mutationObserver.disconnect();
-
-            releaseVolumeControl();
 
             break;
         }

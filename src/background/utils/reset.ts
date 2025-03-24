@@ -12,5 +12,6 @@ export const reset = () => {
     });
     void chrome.storage.session.set({
         isRecording: false,
+        tabId: null,
     });
 };

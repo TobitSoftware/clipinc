@@ -22,12 +22,13 @@ export const useRecordingState = () => {
     }, []);
 
     useEffect(() => {
-        chrome.storage.session.get(['isRecording', 'title', 'subTitle', 'coverSrc', 'progress'], (result) => {
+        chrome.storage.session.get(['isRecording', 'title', 'subTitle', 'coverSrc', 'progress', 'songCount'], (result) => {
             setIsRecording(result.isRecording ?? false);
             setTitle(result.title ?? '');
             setArtist(result.subTitle ?? '');
             setCoverSrc(result.coverSrc ?? '');
             setProgress(result.progress ?? 0);
+            setSongCount(result.songCount ?? 0);
         });
 
         const listener = (change: StorageChange) => {
@@ -46,25 +47,13 @@ export const useRecordingState = () => {
             if ('progress' in change) {
                 setProgress(change.progress.newValue ?? 0);
             }
-        }
-
-        chrome.storage.session.onChanged.addListener(listener);
-        return () => chrome.storage.session.onChanged.removeListener(listener);
-    });
-
-    useEffect(() => {
-        chrome.storage.local.get(['songCount'], (result) => {
-            setSongCount(result.songCount ?? 0);
-        });
-
-        const listener = (change: StorageChange) => {
             if ('songCount' in change) {
                 setSongCount(change.songCount.newValue ?? 0);
             }
         }
 
-        chrome.storage.local.onChanged.addListener(listener);
-        return () => chrome.storage.local.onChanged.removeListener(listener);
+        chrome.storage.session.onChanged.addListener(listener);
+        return () => chrome.storage.session.onChanged.removeListener(listener);
     }, []);
 
     return useMemo(() => ({

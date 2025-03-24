@@ -22,7 +22,7 @@ export const startCapture = async () => {
             type: 'basic',
             title: chrome.i18n.getMessage('name'),
             message: chrome.i18n.getMessage('errorChangeDevice'),
-            iconUrl: 'images/clipinc-128.png',
+            iconUrl: '/images/clipinc-128.png',
         });
 
         console.error(response.error);
@@ -56,7 +56,8 @@ export const startCapture = async () => {
         });
         setRecordingIcon();
         void chrome.storage.session.set({
-            isRecording: true
-        })
+            isRecording: true,
+            tabId: tab.id,
+        });
     });
 };
