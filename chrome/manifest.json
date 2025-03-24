@@ -4,7 +4,7 @@
     "description": "__MSG_description__",
     "manifest_version": 3,
     "version": "0.0.0",
-    "default_locale": "de",
+    "default_locale": "en",
     "icons": {
         "16": "images/clipinc-16.png",
         "32": "images/clipinc-32.png",

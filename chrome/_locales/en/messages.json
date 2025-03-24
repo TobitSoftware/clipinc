@@ -1,0 +1,44 @@
+{
+    "name": {
+        "message": "clipinc®"
+    },
+    "description": {
+        "message": "Get the songs from Spotify as flawless M4A recordings on your hard disk!"
+    },
+    "errorChangeDevice": {
+        "message": "Select this device under “Connect to device” to start recording."
+    },
+    "notificationDownloaded": {
+        "message": "$1 was successfully recorded."
+    },
+    "notificationStop": {
+        "message": "The recording was canceled."
+    },
+    "intro_explanation": {
+        "message": "Open Spotify and log in with your account."
+    },
+    "intro_openSpotify": {
+        "message": "Open Spotify"
+    },
+    "intro_disclaimer": {
+        "message": "This ##link## is an experiment. A permanent function cannot be guaranteed."
+    },
+    "intro_disclaimerLink": {
+        "message": "open source software"
+    },
+    "toggleRecordingLabel_unchecked": {
+        "message": "Start recording"
+    },
+    "toggleRecordingLabel_checked": {
+        "message": "Recording in progress..."
+    },
+    "downloadedSongs_one": {
+        "message": "1 song downloaded"
+    },
+    "downloadedSongs_other": {
+        "message": "$1 songs downloaded"
+    },
+    "showDownloads": {
+        "message": "Show folder"
+    }
+}
