@@ -44,9 +44,7 @@ const Recorder = ({
         }
     }, []);
 
-    const recordingText = isRecording
-        ? 'Aufnahme läuft...'
-        : 'Aufnahme starten';
+    const recordingText = chrome.i18n.getMessage(isRecording ? 'toggleRecordingLabel_checked' : 'toggleRecordingLabel_unchecked');
 
     return (
         <StyledContainer>

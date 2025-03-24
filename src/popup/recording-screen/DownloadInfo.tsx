@@ -13,9 +13,9 @@ const DownloadInfo = ({ songCount }: DownloadInfoProps) => {
     let songsRecordedText = null;
 
     if (songCount === 1) {
-        songsRecordedText = '1 Song runtergeladen';
+        songsRecordedText = chrome.i18n.getMessage('downloadedSongs_one');
     } else if (songCount >= 1) {
-        songsRecordedText = `${songCount} Songs runtergeladen`;
+        songsRecordedText = chrome.i18n.getMessage('downloadedSongs_other', [songCount.toLocaleString()]);
     }
 
     return (
@@ -24,7 +24,7 @@ const DownloadInfo = ({ songCount }: DownloadInfoProps) => {
                 <StyledDownloadCounter>{songsRecordedText}</StyledDownloadCounter>
             )}
             <StyledShowDownloadsButton onClick={handleShowDownloads}>
-                Ordner anzeigen
+                {chrome.i18n.getMessage('showDownloads')}
             </StyledShowDownloadsButton>
         </StyledDownloadInfo>
     );

@@ -3,7 +3,7 @@
         "message": "clipinc®"
     },
     "description": {
-        "message": "Hol Dir die Songs von Spotify als lupenreinen MP3-Mitschnitt auf Deine Festplatte!"
+        "message": "Hol Dir die Songs von Spotify als lupenreinen M4A-Mitschnitt auf Deine Festplatte!"
     },
     "errorChangeDevice": {
         "message": "Wähle unter \"Mit Gerät verbinden\" dieses Gerät aus, damit die Aufnahme gestartet werden kann."
@@ -25,5 +25,20 @@
     },
     "intro_disclaimerLink": {
         "message": "Open-Source-Software"
+    },
+    "toggleRecordingLabel_unchecked": {
+        "message": "Aufnahme starten"
+    },
+    "toggleRecordingLabel_checked": {
+        "message": "Aufnahme läuft..."
+    },
+    "downloadedSongs_one": {
+        "message": "1 Song runtergeladen"
+    },
+    "downloadedSongs_other": {
+        "message": "$1 Songs runtergeladen"
+    },
+    "showDownloads": {
+        "message": "Ordner anzeigen"
     }
 }
