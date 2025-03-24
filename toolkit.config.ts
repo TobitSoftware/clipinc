@@ -37,7 +37,7 @@ export default buildToolkitConfig({
                     if (!absoluteFilename.endsWith(`${path.sep}manifest.json`)) return content;
                     const text = content.toString('utf-8');
                     const json = JSON.parse(text) as { version: string };
-                    json.version = packageJson.version;
+                    json.version = packageJson.version.split('-').shift() as string;
 
                     return `${JSON.stringify(json, undefined, 4)}\n`;
                 },
