@@ -1,6 +1,6 @@
 {
     "name": "clipinc",
-    "version": "1.12.12",
+    "version": "2.0.0-alpha.0",
     "description": "clipinc chrome browser extension to record spotify songs",
     "repository": {
         "type": "git",
