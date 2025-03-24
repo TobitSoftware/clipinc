@@ -10,14 +10,10 @@ export default buildToolkitConfig({
     },
     output: {
         entryPoints: {
-            'background-page/index': {
-                pathIndex: './src/background-page/index',
-                pathHtml: './src/background-page/index.html',
-            },
             'background/index': {
                 pathIndex: './src/background/index',
             },
-            'content/content': {
+            'content/index': {
                 pathIndex: './src/content/index',
             },
             'offscreen/index': {
@@ -27,9 +23,6 @@ export default buildToolkitConfig({
             'popup/index': {
                 pathIndex: './src/popup/index',
                 pathHtml: './src/popup/index.html',
-            },
-            'content/inject': {
-                pathIndex: './src/content/inject',
             },
         },
     },
@@ -51,17 +44,8 @@ export default buildToolkitConfig({
             },
         ];
 
-        const defaultJsFileName = config.output.filename?.js;
         config.output.filename ??= {};
-        config.output.filename.js = (pathData) => {
-            if (['content/content', 'content/inject'].includes(pathData.chunk?.name as string)) {
-                return `[name].js`;
-            }
-            if (typeof defaultJsFileName === 'function') {
-                return defaultJsFileName(pathData);
-            }
-            return defaultJsFileName ?? '[name].js';
-        };
+        config.output.filename.js = '[name].js';
 
         config.dev ??= {};
         config.dev.writeToDisk = true;

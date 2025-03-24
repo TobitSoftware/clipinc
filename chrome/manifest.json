@@ -17,7 +17,7 @@
     },
     "content_scripts": [
         {
-            "js": ["static/js/content/content.js"],
+            "js": ["static/js/content/index.js"],
             "matches": ["https://open.spotify.com/*"]
         }
     ],
@@ -45,9 +45,5 @@
     "host_permissions": [
         "https://*.spotify.com/*"
     ],
-    "version": "1.12.12",
-    "web_accessible_resources": [{
-        "resources": ["static/js/content/inject.js"],
-        "matches": ["https://open.spotify.com/*"]
-    }]
+    "version": "1.12.12"
 }
