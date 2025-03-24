@@ -9,7 +9,7 @@
         "message": "Wähle unter \"Mit Gerät verbinden\" dieses Gerät aus, damit die Aufnahme gestartet werden kann."
     },
     "notificationDownloaded": {
-        "message": "##TITLE## - ##ARTIST## wurde erfolgreich aufgenommen."
+        "message": "$1 wurde erfolgreich aufgenommen."
     },
     "notificationStop": {
         "message": "Die Aufnahme wurde abgebrochen."

@@ -36,7 +36,7 @@ const handleMessage = (
             void chrome.runtime.sendMessage({
                 command: 'stopRecording',
                 target: 'offscreen',
-            })
+            });
             chrome.storage.session.get(['volume'], ({ volume }) => {
                 void setVolume(Number(volume) ?? 1);
             });
@@ -50,7 +50,7 @@ const handleMessage = (
 
             void chrome.downloads.download({
                 url,
-                filename,
+                filename: `clipinc/${filename}`,
             });
             chrome.storage.local.get(['songCount'], ({ songCount }) => {
                 const oldSongCount = (songCount || 0) as number;
@@ -162,3 +162,24 @@ chrome.webRequest.onBeforeRequest.addListener(
     },
     ['requestBody'],
 );
+
+chrome.downloads.onChanged.addListener((downloadDelta) => {
+    if (downloadDelta?.state?.current !== 'complete') {
+        return;
+    }
+    chrome.downloads.search({ id: downloadDelta.id }, (downloadItems) => {
+        downloadItems.forEach((downloadItem) => {
+            if (downloadItem.byExtensionId === chrome.runtime.id) {
+                void chrome.downloads.erase({
+                    id: downloadItem.id,
+                });
+                chrome.notifications.create({
+                    type: 'basic',
+                    title: chrome.i18n.getMessage('name'),
+                    message: chrome.i18n.getMessage('notificationDownloaded', [downloadItem.filename]),
+                    iconUrl: '/images/clipinc-128.png',
+                });
+            }
+        });
+    });
+});
