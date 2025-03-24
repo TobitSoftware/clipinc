@@ -18,6 +18,7 @@ export const StyledShowDownloadsButton = styled.button`
     padding: 0;
     border: none;
     border-bottom: 1px dashed;
+    background: transparent;
 
     cursor: pointer;
 

@@ -63,6 +63,7 @@ const Recorder = ({
 
                 <StyledLogoLink
                     href="https://clipinc.de/"
+                    className="no-link-style"
                     target="_blank"
                     rel="noopener noreferrer"
                 >
