@@ -1,259 +1,248 @@
-import './inject';
-
-let trackTimeout;
-
-// handle player play event
-function handlePlayerPlay() {
-    chrome.runtime.sendMessage(
-        { command: 'spotifyPlay', data: { track: getLocalTrackInfo() } },
-        (response) => {}
+let enabled = false;
+let currentId = null;
+let endedId = null;
+let endedAt = 0;
+let pauseTimeout;
+let playing = false;
+let mediaTime = 0;
+let mediaDuration = 0;
+let lastPosition = null;
+function sendMsg(message) {
+    try {
+        chrome.runtime.sendMessage(
+            message,
+            () => void chrome.runtime.lastError,
+        );
+    } catch {
+        enabled = false;
+    }
+}
+function text(selector) {
+    return document.querySelector(selector)?.textContent?.trim() || '';
+}
+function durationToMs(value) {
+    const parts = String(value || '')
+        .split(':')
+        .map(Number);
+    return parts.every(Number.isFinite)
+        ? parts.reduce((sum, part) => sum * 60 + part, 0) * 1000
+        : 0;
+}
+const albumMetadata = new Map();
+function getAlbumMetadata(id, title) {
+    const cached = albumMetadata.get(id) || {};
+    if (!/\/album\/[a-zA-Z0-9]+/.test(window.location.pathname)) return cached;
+    const main = document.querySelector('main');
+    const heading = main?.querySelector('h1');
+    const album = heading?.textContent?.trim();
+    if (!album || !id) return cached;
+    const rows = [...(main.querySelectorAll('[role="row"]') || [])];
+    const row = rows.find((r) =>
+        [...r.querySelectorAll('a[href]')].some(
+            (a) =>
+                a
+                    .getAttribute('href')
+                    ?.match(/\/track\/([a-zA-Z0-9]+)/)?.[1] === id &&
+                a.textContent.trim() === title,
+        ),
     );
-    trackTimeout = setTimeout(() => {
-        getTrackInfo().then((track) => {
-            chrome.runtime.sendMessage({
-                command: 'spotifyUpdateTrack',
-                data: { track },
+    // Never apply the displayed album to an unrelated currently playing song.
+    if (!row) return cached;
+    let header = heading;
+    for (
+        let depth = 0;
+        header && depth < 6;
+        depth++, header = header.parentElement
+    ) {
+        const lines = (header.innerText || '')
+            .split('\n')
+            .map((v) => v.trim())
+            .filter(Boolean);
+        const year = lines.find((v) => /^(19|20)\d{2}$/.test(v));
+        if (!year || !['Album', 'Single', 'EP'].includes(lines[0])) continue;
+        const artists = [...header.querySelectorAll('a[href*="/artist/"]')]
+            .map((a) => a.textContent.trim())
+            .filter(Boolean);
+        if (!artists.length) continue;
+        const value = {
+            album,
+            albumArtist: [...new Set(artists)].join(' & '),
+            albumReleaseYear: Number(year),
+        };
+        const number = row.innerText?.split('\n')[0]?.trim();
+        if (/^[1-9]\d*$/.test(number)) value.trackNumber = Number(number);
+        else if (cached.album === album && cached.trackNumber)
+            value.trackNumber = cached.trackNumber;
+        albumMetadata.set(id, value);
+        if (albumMetadata.size > 500)
+            albumMetadata.delete(albumMetadata.keys().next().value);
+        return value;
+    }
+    return cached;
+}
+function getLocalTrackInfo() {
+    const link = document.querySelector(
+        '[data-testid="nowplaying-track-link"], [data-testid="context-item-info-title"] a, a[data-testid="context-item-info-title"]',
+    );
+    const title =
+        text('[data-testid="context-item-info-title"]') ||
+        text('[data-testid="nowplaying-track-link"]');
+    const artist =
+        text('[data-testid="context-item-info-subtitles"]') ||
+        text('[data-testid="nowplaying-artist"]');
+    if (!title || !artist) return null;
+    const context = document.querySelector(
+        '[data-testid="now-playing-widget"] a[href*="/playlist/"], [data-testid="context-link"][href*="/playlist/"]',
+    );
+    const list = document.querySelector(
+        '[data-testid="playlist-tracklist"], [data-testid="track-list"]',
+    );
+    const directory =
+        context?.textContent?.trim() ||
+        list?.getAttribute('aria-label') ||
+        (/\/(playlist|album)\//.test(window.location.pathname)
+            ? text('main h1')
+            : '');
+    const id =
+        link?.getAttribute('href')?.match(/\/track\/([a-zA-Z0-9]+)/)?.[1] ||
+        `${artist}\n${title}`;
+    return {
+        id,
+        ...getAlbumMetadata(id, title),
+        title,
+        artist,
+        directory,
+        duration:
+            durationToMs(text('[data-testid="playback-duration"]')) ||
+            mediaDuration * 1000,
+        positionKnown: Boolean(text('[data-testid="playback-position"]')),
+        progress:
+            durationToMs(text('[data-testid="playback-position"]')) ||
+            mediaTime * 1000,
+        cover:
+            document.querySelector(
+                '[data-testid="now-playing-widget"] img, img[data-testid="cover-art-image"]',
+            )?.src || '',
+        kbps: 256,
+        startTime: Date.now(),
+    };
+}
+function updateTrack() {
+    if (!enabled || !playing) return;
+    const track = getLocalTrackInfo();
+    if (!track) return;
+    // Spotify may update its title a moment after the media play event.
+    if (!currentId && track.id === endedId && Date.now() - endedAt < 1500)
+        return;
+    const now = Date.now();
+    if (lastPosition && lastPosition.id === track.id && track.positionKnown) {
+        const delta = track.progress - lastPosition.progress;
+        const elapsed = now - lastPosition.at;
+        if (delta < -2000 || delta > elapsed + 2000) {
+            // The visible song timeline, not internal media seeks, determines
+            // whether the listener actually skipped audio.
+            const repeat =
+                lastPosition.progress >= track.duration - 3000 &&
+                track.progress < 3000;
+            sendMsg({
+                command: repeat ? 'spotifyEnded' : 'spotifySeeking',
+                data: {
+                    reason: repeat ? 'timeline-repeat' : 'timeline-jump',
+                    from: lastPosition.progress,
+                    to: track.progress,
+                },
             });
-        });
-    }, 1000);
+            currentId = null;
+        }
+        if (delta > 0) clearTimeout(pauseTimeout);
+    }
+    lastPosition = track.positionKnown
+        ? { id: track.id, progress: track.progress, at: now }
+        : null;
+    if (track.id !== currentId) {
+        currentId = track.id;
+        endedId = null;
+        sendMsg({ command: 'spotifyPlay', data: { track } });
+    } else {
+        sendMsg({ command: 'spotifyUpdateTrack', data: { track } });
+    }
 }
-
-// handle player ended event
-function handlePlayerEnded() {
-    clearTimeout(trackTimeout);
-    chrome.runtime.sendMessage(
-        { command: 'spotifyEnded', data: {} },
-        (response) => {}
-    );
-}
-
-// handle player abort event
-function handlePlayerAbort() {
-    clearTimeout(trackTimeout);
-    chrome.runtime.sendMessage(
-        { command: 'spotifyAbort', data: {} },
-        (response) => {}
-    );
-}
-
-// handle player pause event
-function handlePlayerPause() {
-    chrome.runtime.sendMessage(
-        { command: 'spotifyPause', data: {} },
-        (response) => {}
-    );
-}
-
-// handle player pause event
-function handlePlayerSeek() {
-    chrome.runtime.sendMessage({ command: 'spotifySeeking', data: {} });
-}
+document.addEventListener('clipinc-media', ({ detail }) => {
+    if (!enabled || !detail) return;
+    mediaTime = detail.time;
+    mediaDuration = detail.duration;
+    sendMsg({
+        command: 'spotifyDiagnostic',
+        data: {
+            event: detail.type,
+            mediaTime: detail.time,
+            title: getLocalTrackInfo()?.title,
+        },
+    });
+    switch (detail.type) {
+        case 'play':
+            clearTimeout(pauseTimeout);
+            playing = true;
+            setVolume(1);
+            updateTrack();
+            break;
+        case 'ended': {
+            const track = getLocalTrackInfo();
+            // An internal media element ending does not necessarily mean that
+            // Spotify's displayed song has ended (videos/previews/replacement).
+            if (
+                !track?.positionKnown ||
+                track.id !== currentId ||
+                track.duration <= 0 ||
+                track.progress < track.duration - 2000
+            )
+                break;
+            clearTimeout(pauseTimeout);
+            endedId = currentId;
+            endedAt = Date.now();
+            currentId = null;
+            lastPosition = null;
+            playing = false;
+            sendMsg({
+                command: 'spotifyEnded',
+                data: { reason: 'timeline-ended' },
+            });
+            break;
+        }
+        case 'pause':
+            clearTimeout(pauseTimeout);
+            // Continuing visible playback cancels this timeout in updateTrack.
+            pauseTimeout = setTimeout(() => {
+                playing = false;
+                sendMsg({ command: 'spotifyPause', data: {} });
+            }, 2500);
+            break;
+        case 'abort':
+        case 'seeking':
+            // These are implementation events inside Spotify. A discontinuity
+            // in the visible playback position is handled by updateTrack.
+            break;
+        default:
+            break;
+    }
+});
+// Track changes are not guaranteed to emit ended/play on a reused media element.
+setInterval(updateTrack, 250);
 
 // handle player volume change event
 function handlePlayerVolumeInput(event) {
-    chrome.runtime.sendMessage({
+    sendMsg({
         command: 'setVolume',
         data: { volume: parseFloat(event.target.value) },
     });
 }
 
-/**
- * Checks if current playing Track is in an Album
- * @returns {boolean}
- */
-function isAlbumTrack() {
-    const playIcon = document.querySelector('.cover-art-playback playing');
-
-    return false;
-}
-
-/**
- * Searches in the DOM for the album name
- * @returns {string}
- */
-function getAlbumName() {
-    const trackList = document.querySelector('div[data-testid="track-list"]');
-
-    return trackList ? trackList.getAttribute('aria-label') || '' : '';
-}
-
-/**
- * Searches in the DOM for the playlist name
- * @returns {string}
- */
-function getPlayListName() {
-    const trackList = document.querySelector(
-        'div[data-testid="playlist-tracklist"]'
-    );
-
-    return trackList?.getAttribute('aria-label') || '';
-}
-
-/**
- * Checks if the current playing Track is in a Playlist
- * @returns {boolean}
- */
-function isTrackInPlayList() {
-    const playlist = document.querySelector(
-        'div[data-testid="playlist-tracklist"]'
-    );
-
-    return Boolean(playlist);
-}
-
-// get track info from dom
-const getTrackInfo = () =>
-    new Promise((resolve) => {
-        let directoryName = '';
-        const isPlaylistTrack = isTrackInPlayList();
-
-        if (!isPlaylistTrack) {
-            directoryName = getAlbumName();
-        } else {
-            directoryName = getPlayListName();
-        }
-        const isPremium = document.querySelector('.AdsContainer') === null;
-
-        fetch(
-            'https://open.spotify.com/get_access_token?reason=transport&productType=web_player'
-        )
-            .then((data) => data.json())
-            .then((json) => {
-                if (json.accessToken && json.accessToken !== '') {
-                    fetch('https://api.spotify.com/v1/me/player', {
-                        headers: {
-                            Authorization: `Bearer ${json.accessToken}`,
-                        },
-                    })
-                        .then((res) => res.json())
-                        .then((t) => {
-                            if (t.currently_playing_type === 'ad') {
-                                const track = getLocalTrackInfo();
-                                track.type = 'ad';
-                                resolve(track);
-                                return;
-                            }
-
-                            const track = t.item;
-
-                            resolve({
-                                title: track.name,
-                                artist: track.artists.reduce(
-                                    (acc, a) =>
-                                        acc + (acc ? ', ' : '') + a.name,
-                                    ''
-                                ),
-                                duration: track.duration_ms,
-                                cover: track.album.images
-                                    ? track.album.images[0].url
-                                    : undefined,
-                                album: track.album.name,
-                                discNumber: track.disc_number,
-                                trackNumber: track.track_number,
-                                albumArtist: track.album.artists.reduce(
-                                    (acc, a) =>
-                                        acc + (acc ? ', ' : '') + a.name,
-                                    ''
-                                ),
-                                albumReleaseYear: parseInt(
-                                    track.album.release_date.substring(0, 4),
-                                    10
-                                ),
-                                isPremium,
-                                kbps: isPremium ? 256 : 128,
-                                directory:
-                                    directoryName !== ''
-                                        ? directoryName
-                                        : undefined,
-                                progress: t.progress_ms,
-                                startTime: new Date(),
-                            });
-                        })
-                        .catch((err) => {
-                            console.error(
-                                'clipinc: could not retrieve remote track info',
-                                err
-                            );
-                            resolve(getLocalTrackInfo());
-                        });
-                }
-            })
-            .catch((ex) => {
-                console.log('ex', ex);
-            });
-    });
-
-function getLocalTrackInfo() {
-    let directoryName = '';
-
-    const isPlaylistTrack = isTrackInPlayList();
-
-    if (!isPlaylistTrack) {
-        directoryName = getAlbumName();
-    } else {
-        directoryName = getPlayListName();
-    }
-    const isPremium = document.querySelector('.AdsContainer') === null;
-
-    const title = document.querySelector(
-        '[data-testid="context-item-info-title"]'
-    ).textContent;
-    const artist = document.querySelector(
-        '[data-testid="context-item-info-subtitles"]'
-    ).textContent;
-
-    const duration =
-        document.querySelector('[data-testid="playback-duration"]')
-            .textContent || 0;
-    const cover =
-        document.querySelector('img[data-testid="cover-art-image"]').src || '';
-
-    return {
-        artist,
-        title,
-        duration: durationToMs(duration),
-        cover,
-        isPremium,
-        kbps: isPremium ? 256 : 128,
-        directory: directoryName !== '' ? directoryName : undefined,
-        progress: 0,
-        startTime: Date.now(),
-    };
-}
-
-// parses duration to ms
-function durationToMs(duration) {
-    const times = duration.split(':');
-    return (parseInt(times[0], 10) * 60 + parseInt(times[1], 10)) * 1000;
-}
-
-// retrieves a field from the cookies
-function getCookie(key) {
-    const cookies = document.cookie.split('; ');
-    for (let i = 0, l = cookies.length; i < l; i++) {
-        const c = cookies[i].split('=');
-        if (c[0] === key) {
-            return c[1];
-        }
-    }
-
-    return '';
-}
-
-function getAccessToken() {
-    return getCookie('wp_access_token');
-}
-
-// checks if playback is on the local device
-function getIsLocalDevice() {
-    const connectBar = document.querySelector('.ConnectBar');
-
-    return connectBar === null;
-}
-
 // get current volume from dom
 function getVolume() {
-    const v = JSON.parse(localStorage.getItem('playback') || '{"volume":1}').volume;
+    let v = 1;
+    try {
+        v = JSON.parse(localStorage.getItem('playback') || '{}').volume ?? 1;
+    } catch {}
     return Math.max(0, Math.min(1, v * v * v));
 }
 
@@ -263,6 +252,28 @@ function setVolume(volume) {
         detail: { volume },
     });
     document.dispatchEvent(e);
+}
+
+/**
+ * Find Spotify's volume button using multiple selectors, newest first.
+ * Spotify regularly changes its DOM; this makes the code resilient.
+ */
+function findVolumeButton() {
+    const selectors = [
+        // Current Spotify (2025/2026) – data-testid on the volume button
+        '[data-testid="volume-bar-toggle-mute-button"]',
+        '[data-testid="volume-bar"]',
+        // Older layout – aria-describedby
+        '.control-button[aria-describedby="volume-icon"]',
+        // Generic fallback
+        'button[aria-label*="olume"]',
+        'button[aria-label*="olumen"]',
+    ];
+    for (const sel of selectors) {
+        const el = document.querySelector(sel);
+        if (el) return el;
+    }
+    return null;
 }
 
 // overwrite spotify volume control, to prevent gain change while recording
@@ -278,9 +289,7 @@ function hijackVolumeControl() {
     input.min = 0;
     input.max = 1;
     input.step = 0.01;
-    input.value = JSON.parse(localStorage.getItem('playback') || '{"volume":1}').volume.toFixed(
-        2
-    );
+    input.value = getVolume().toFixed(2);
     input.classList.add('slider');
     input.addEventListener('input', handlePlayerVolumeInput);
 
@@ -288,13 +297,17 @@ function hijackVolumeControl() {
     volumeBar.appendChild(input);
     volumeBar.classList.add('volume-bar', 'volume-bar--hijacked');
 
-    const volumeBarElement = document.querySelector('.control-button[aria-describedby="volume-icon"]');
+    const volumeBarElement = findVolumeButton();
 
     if (volumeBarElement) {
         volumeBarElement.parentNode.appendChild(volumeBar);
         volumeBarElement.style.display = 'none';
     } else {
-        console.error('could not hijack volume control');
+        // Volume control not found – recording still works, volume just isn't
+        // locked to 100%. Log at debug level to avoid noise in the error panel.
+        console.debug(
+            'clipinc: could not hijack volume control – Spotify DOM may have changed',
+        );
     }
 }
 
@@ -306,125 +319,37 @@ function releaseVolumeControl() {
         volumeBar.parentNode.removeChild(volumeBar);
     }
 
-    const regularVolumeBar = document.querySelector('.control-button[aria-describedby="volume-icon"]');
-
-    regularVolumeBar.style.display = '';
+    const regularVolumeBar = findVolumeButton();
+    if (regularVolumeBar) {
+        regularVolumeBar.style.display = '';
+    }
 }
 
-chrome.runtime.onMessage.addListener(
-    ({ command, data }, sender, sendResponse) => {
-        switch (command) {
-            case 'prepareRecording':
-                const isReady =
-                    document.querySelector('body.clipinc-ready') !== null;
-
-                if (!isReady) {
-                    window.location.reload();
-                    return;
-                }
-
-                const error = !getIsLocalDevice()
-                    ? 'cannot record from remote device'
-                    : undefined;
-                const oldVolume = getVolume();
-
-                if (!error) {
-                    hijackVolumeControl();
-                    setVolume(1);
-                }
-
-                sendResponse({ volume: oldVolume, error });
-                break;
-            case 'startRecording':
-                skipBack();
-                setTimeout(() => {
-                    if (!play()) {
-                        // if track is already running when starting the recording
-                        // dispatch play event so the track is known to clipinc
-                        handlePlayerPlay();
-                    }
-                }, 1000);
-                break;
-            case 'stopRecording':
-                releaseVolumeControl();
-                setVolume(data.volume);
-                break;
+chrome.runtime.onMessage.addListener(({ command, data }, sender, respond) => {
+    try {
+        if (command === 'prepareRecording') {
+            respond({ volume: getVolume() });
         }
+        if (command === 'startRecording') {
+            enabled = true;
+            currentId = null;
+            lastPosition = null;
+            endedId = null;
+            hijackVolumeControl();
+            setVolume(1);
+            document.dispatchEvent(new CustomEvent('clipinc-request-state'));
+            respond({ success: true });
+        }
+        if (command === 'stopRecording') {
+            enabled = false;
+            playing = false;
+            clearTimeout(pauseTimeout);
+            releaseVolumeControl();
+            setVolume(data.volume ?? 1);
+            respond({ success: true });
+        }
+    } catch (error) {
+        console.error('clipinc:', error);
+        respond({ error: error.message });
     }
-);
-
-function play() {
-    const playButton = document.querySelector(
-        '.player-controls__buttons>[data-testid="control-button-playpause"]'
-    );
-
-    //  Check whether play/pause button currently shows play or pause icon
-    if (playButton && playButton.querySelector('path[d="M3 1.713a.7.7 0 0 1 1.05-.607l10.89 6.288a.7.7 0 0 1 0 1.212L4.05 14.894A.7.7 0 0 1 3 14.288V1.713z"]')) {
-        playButton.click();
-        return true;
-    }
-
-    return false;
-}
-
-function pause() {
-    const pauseButton = document.querySelector(
-        '.player-controls__buttons>[data-testid="control-button-playpause"]'
-    );
-
-    if (pauseButton) {
-        pauseButton.click();
-        return true;
-    }
-
-    return false;
-}
-
-function skipBack() {
-    const skipBackButton = document.querySelector(
-        '.player-controls__buttons [data-testid="control-button-skip-back"]'
-    );
-
-    if (skipBackButton) {
-        skipBackButton.click();
-        return true;
-    }
-
-    return false;
-}
-
-//load inject.js to start the player hijack
-function hijackPlayer() {
-    const s = document.createElement('script');
-    s.src = chrome.extension.getURL('content/inject.js');
-    s.onload = function () {
-        this.remove();
-
-        document.addEventListener('play', handlePlayerPlay);
-        document.addEventListener('ended', handlePlayerEnded);
-        document.addEventListener('pause', handlePlayerPause);
-        document.addEventListener('abort', handlePlayerAbort);
-        document.addEventListener('seeking', handlePlayerSeek);
-
-        //event listener to increase volume for first track
-        document.addEventListener('initplayer', () => {
-            chrome.storage.local.get('isRecording', ({ isRecording }) => {
-                if (isRecording) {
-                    setVolume(1);
-                }
-            });
-        });
-
-        // if player is already recording, hijack volume control immediately
-        chrome.storage.local.get('isRecording', ({ isRecording }) => {
-            if (isRecording) {
-                hijackVolumeControl();
-                play();
-            }
-        });
-    };
-    (document.head || document.documentElement).appendChild(s);
-}
-
-// hijack player as soon as script is ready
-hijackPlayer();
+});

@@ -1,329 +1,360 @@
-import { Recorder } from './recorder';
+import { createGenreLookup } from './musicbrainz';
+import { downloadPath } from './download-path';
 
-// reset storage after installation
-chrome.runtime.onInstalled.addListener(resetStorage);
-
-// reset storage when chrome starts
-chrome.runtime.onStartup.addListener(resetStorage);
-
-//handle tab / window removed
-chrome.tabs.onRemoved.addListener(handleTabRemove);
-chrome.windows.onRemoved.addListener(handleWindowRemove);
-
-chrome.runtime.onMessage.addListener(
-    ({ command, data }, sender, sendResponse) => {
-        switch (command) {
-            case 'startCapture':
-                startCapture().then(
-                    () => {
-                        sendResponse({ success: true });
-                    },
-                    () => {
-                        sendResponse({ success: false });
-                    }
-                );
-                break;
-        }
-
-        return true;
-    }
-);
-
-// start tab capturing
-const startCapture = () =>
-    new Promise((resolve, reject) => {
-        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-            const tab = tabs[0];
-            try {
-                chrome.tabs.sendMessage(
-                    tab.id,
-                    { command: 'prepareRecording' },
-                    {},
-                    (response) => {
-                        if (response && response.error) {
-                            chrome.notifications.create(
-                                'clipincError',
-                                {
-                                    type: 'basic',
-                                    title: chrome.i18n.getMessage('name'),
-                                    message: chrome.i18n.getMessage(
-                                        'errorChangeDevice'
-                                    ),
-                                    iconUrl: 'assets/images/clipinc-128.png',
-                                },
-                                console.debug.bind(console)
-                            );
-
-                            console.error(response.error);
-
-                            reject();
-                            return;
-                        }
-
-                        chrome.tabCapture.capture({ audio: true }, (stream) => {
-                            if (chrome.runtime.lastError || !stream) {
-                                console.error(
-                                    chrome.runtime.lastError ||
-                                        'No stream found'
-                                );
-                                reject();
-                                return;
-                            }
-
-                            const audioCtx = new AudioContext();
-                            const source = audioCtx.createMediaStreamSource(
-                                stream
-                            );
-
-                            const mediaRecorder = new Recorder(source);
-                            mediaRecorder.onComplete = download;
-
-                            //restore audio for user
-                            const audio = new Audio();
-                            audio.srcObject = stream;
-                            audio.volume = response.volume;
-                            audio.play();
-
-                            //140e1f61f387e586101ab77f507a5e3df2d7d46f
-
-                            const stopRecording = () => {
-                                chrome.runtime.onMessage.removeListener(
-                                    mediaListener
-                                );
-                                chrome.tabs.onUpdated.removeListener(
-                                    updateListener
-                                );
-
-                                mediaRecorder.cancelRecording();
-                                mediaRecorder.onComplete = () => {};
-
-                                audioCtx.close();
-                                stream.getAudioTracks()[0].stop();
-
-                                reset();
-                                chrome.tabs.sendMessage(tab.id, {
-                                    command: 'stopRecording',
-                                    data: { volume: audio.volume },
-                                });
-
-                                chrome.notifications.create(
-                                    'clipincStop',
+const OFFSCREEN_URL = chrome.runtime.getURL('background-page/offscreen.html');
+const ICON_URL = chrome.runtime.getURL('assets/images/clipinc-128.png');
+let starting = false;
+let creating;
+let downloadQueue = Promise.resolve();
+let mediaQueue = Promise.resolve();
+let iconQueue = Promise.resolve();
+let lastIcon;
+let diagnosticQueue = Promise.resolve();
+// Chrome drops fetch's User-Agent header; set it only for this extension's
+// MusicBrainz API calls, using a session rule scoped to the granted host.
+let identification;
+const lookupGenre = createGenreLookup({
+    fetchData: (...args) => fetch(...args),
+    storage: chrome.storage.local,
+    identify: () => {
+        if (!identification)
+            identification = chrome.declarativeNetRequest
+                .updateSessionRules({
+                    removeRuleIds: [7301],
+                    addRules: [
+                        {
+                            id: 7301,
+                            priority: 1,
+                            action: {
+                                type: 'modifyHeaders',
+                                requestHeaders: [
                                     {
-                                        type: 'basic',
-                                        title: chrome.i18n.getMessage('name'),
-                                        message: chrome.i18n.getMessage(
-                                            'notificationStop'
-                                        ),
-                                        iconUrl:
-                                            'assets/images/clipinc-128.png',
+                                        header: 'User-Agent',
+                                        operation: 'set',
+                                        value: 'clipinc-local/1.12.12 (https://github.com/TobitSoftware/clipinc)',
                                     },
-                                    console.debug.bind(console)
-                                );
-                            };
-
-                            const mediaListener = ({ command, data }) => {
-                                switch (command) {
-                                    case 'setVolume':
-                                        audio.volume = data.volume;
-                                        break;
-                                    case 'spotifyPlay':
-                                        chrome.storage.local.set({
-                                            track: data.track,
-                                        });
-                                        mediaRecorder.startRecording();
-                                        break;
-                                    case 'spotifyUpdateTrack':
-                                        chrome.storage.local.set({
-                                            track: data.track,
-                                        });
-                                        break;
-                                    case 'spotifyEnded':
-                                        chrome.storage.local.get(
-                                            ['track'],
-                                            ({ track }) => {
-                                                // used to skip ads
-                                                if (track.type === 'ad') {
-                                                    mediaRecorder.cancelRecording();
-                                                    return;
-                                                }
-
-                                                mediaRecorder.finishRecording(
-                                                    track
-                                                );
-                                            }
-                                        );
-                                        break;
-                                    case 'spotifyAbort':
-                                        mediaRecorder.cancelRecording();
-                                        break;
-                                    case 'spotifyPause':
-                                    case 'stopCapture':
-                                        stopRecording();
-                                        break;
-                                }
-                            };
-
-                            const updateListener = (id, changeInfo) => {
-                                chrome.storage.local.get(
-                                    ['tabId'],
-                                    ({ tabId }) => {
-                                        if (
-                                            tabId === id &&
-                                            changeInfo.status === 'loading'
-                                        ) {
-                                            stopRecording();
-                                        }
-                                    }
-                                );
-                            };
-
-                            chrome.runtime.onMessage.addListener(mediaListener);
-                            chrome.tabs.onUpdated.addListener(updateListener);
-
-                            chrome.tabs.sendMessage(tab.id, {
-                                command: 'startRecording',
-                            });
-
-                            chrome.storage.local.set({
-                                isRecording: true,
-                                tabId: tab.id,
-                                songCount: 0,
-                            });
-                            setRecordingIcon();
-                            resolve();
-                        });
-                    }
-                );
-            } catch (ex) {
-                console.log('ex', ex);
-            }
-        });
-    });
-
-// delete storage if the tab that was recorded is closed
-function handleTabRemove(id) {
-    chrome.storage.local.get(['tabId'], ({ tabId }) => {
-        if (tabId && id === tabId) {
-            reset();
-        }
-    });
+                                ],
+                            },
+                            condition: {
+                                urlFilter: '|https://musicbrainz.org/ws/2/',
+                                initiatorDomains: [chrome.runtime.id],
+                                resourceTypes: ['xmlhttprequest'],
+                            },
+                        },
+                    ],
+                })
+                .catch((error) => {
+                    identification = null;
+                    throw error;
+                });
+        return identification;
+    },
+});
+function offscreen(command, data) {
+    return chrome.runtime.sendMessage({ target: 'offscreen', command, data });
 }
-
-// delete storage if the window that was recording was closed
-function handleWindowRemove() {
-    chrome.storage.local.get(['tabId'], ({ tabId }) => {
-        chrome.tabs.get(tabId, (tab) => {
-            if (tab !== 0 && (chrome.runtime.lastError || !tab)) {
-                reset();
-            }
-        });
-    });
-}
-
-// clear storage
-function resetStorage() {
-    chrome.storage.local.set({
-        isRecording: false,
-        tabId: 0,
-        track: null,
-        soungCount: 0,
-    });
-}
-
-// download file
-function download(recorder, track) {
-    chrome.downloads.onChanged.addListener(cleanDownloadShelf);
-
-    const regex = /[^a-zA-Z0-9]/g;
-    let filename = `clipinc`;
-
-    console.debug('track', track);
-
-    if (track.directory) {
-        filename = `${filename}/${
-            track.directory ? track.directory.replace(regex, ' ').trim() : ''
-        }`;
-    }
-
-    const title = track.title ? track.title.replace(regex, ' ').trim() : '';
-    const artist = track.artist ? track.artist.replace(regex, ' ').trim() : '';
-
-    filename = `${filename}/${artist} - ${title}.mp3`;
-    console.debug('filename', filename);
-
-    //filename = `test.mp3`;
-    chrome.downloads.download({
-        url: track.url,
-        filename,
-        conflictAction: 'overwrite',
-    });
-
-    chrome.storage.local.get(['songCount'], ({ songCount }) => {
-        songCount++;
-        chrome.storage.local.set({ songCount });
-        chrome.runtime.sendMessage(undefined, {
-            command: 'downloaded',
-            data: { songCount },
-        });
-    });
-
-    let message = chrome.i18n.getMessage('notificationDownloaded');
-    message = message.replace('##TITLE##', track.title);
-    message = message.replace('##ARTIST##', track.artist);
-
-    chrome.notifications.create(
-        'clipincDownloaded',
-        {
-            type: 'basic',
-            title: chrome.i18n.getMessage('name'),
-            message,
-            iconUrl: 'assets/images/clipinc-128.png',
-        },
-        console.debug.bind(console)
+function broadcast(command, data) {
+    chrome.runtime.sendMessage(
+        { target: 'popup', command, data },
+        () => void chrome.runtime.lastError,
     );
 }
-
-// remove files from download shelf to stop spam
-function cleanDownloadShelf(delta) {
-    if (!delta || !delta.state || delta.state.current !== 'complete') {
+async function exists() {
+    return (
+        (
+            await chrome.runtime.getContexts({
+                contextTypes: ['OFFSCREEN_DOCUMENT'],
+                documentUrls: [OFFSCREEN_URL],
+            })
+        ).length > 0
+    );
+}
+async function ensureOffscreen() {
+    if (await exists()) return;
+    if (!creating)
+        creating = chrome.offscreen
+            .createDocument({
+                url: OFFSCREEN_URL,
+                reasons: ['USER_MEDIA', 'BLOBS', 'WORKERS'],
+                justification:
+                    'Record tab audio, encode MP3 files and hold download URLs',
+            })
+            .finally(() => {
+                creating = null;
+            });
+    await creating;
+}
+function icon(recording) {
+    if (lastIcon === recording) return iconQueue;
+    lastIcon = recording;
+    // Use extension-root URLs: the service worker lives in background-page/.
+    // Queue transitions and do not reload eight images on every track update.
+    iconQueue = iconQueue
+        .then(() =>
+            chrome.action.setIcon({
+                path: Object.fromEntries(
+                    [16, 32, 48, 128].map((size) => [
+                        size,
+                        chrome.runtime.getURL(
+                            `assets/images/clipinc-${size}${
+                                recording ? '-record' : ''
+                            }.png`,
+                        ),
+                    ]),
+                ),
+            }),
+        )
+        .catch((error) => {
+            console.warn(
+                'clipinc: Symbol konnte nicht aktualisiert werden:',
+                error.message,
+            );
+        });
+    return iconQueue;
+}
+async function reset() {
+    await chrome.storage.local.set({
+        isRecording: false,
+        stopAfterTrack: false,
+        tabId: 0,
+        track: null,
+        songCount: 0,
+    });
+    icon(false);
+}
+chrome.runtime.onInstalled.addListener(reset);
+chrome.runtime.onStartup.addListener(reset);
+async function restore({ tabId, volume } = {}) {
+    if (tabId)
+        await chrome.tabs
+            .sendMessage(tabId, { command: 'stopRecording', data: { volume } })
+            .catch(() => {});
+    await chrome.storage.local.set({
+        isRecording: false,
+        stopAfterTrack: false,
+        tabId: 0,
+        track: null,
+    });
+    icon(false);
+}
+async function stopCapture() {
+    if (await exists()) await restore(await offscreen('stop'));
+    else await restore();
+}
+async function startCapture() {
+    if (starting) throw new Error('Aufnahme wird bereits gestartet');
+    starting = true;
+    let tab, prepared;
+    try {
+        await ensureOffscreen();
+        if ((await offscreen('status'))?.active) return;
+        [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+        if (!tab?.url?.startsWith('https://open.spotify.com/'))
+            throw new Error('Bitte den Spotify-Webplayer öffnen');
+        prepared = await chrome.tabs.sendMessage(tab.id, {
+            command: 'prepareRecording',
+        });
+        if (!prepared || prepared.error)
+            throw new Error(prepared?.error || 'Spotify-Seite bitte neu laden');
+        const streamId = await chrome.tabCapture.getMediaStreamId({
+            targetTabId: tab.id,
+        });
+        const response = await offscreen('start', {
+            streamId,
+            volume: prepared.volume ?? 1,
+            tabId: tab.id,
+        });
+        if (!response?.success)
+            throw new Error(response?.error || 'Audiostart fehlgeschlagen');
+        await chrome.storage.local.set({ songCount: 0, lastError: null });
+        await chrome.tabs.sendMessage(tab.id, { command: 'startRecording' });
+    } catch (error) {
+        await stopCapture();
+        if (prepared && tab)
+            await restore({ tabId: tab.id, volume: prepared.volume });
+        throw error;
+    } finally {
+        starting = false;
+    }
+}
+async function reportError(message) {
+    console.error('clipinc:', message);
+    await chrome.storage.local.set({ lastError: message });
+    broadcast('captureError', { message });
+}
+async function downloadTrack({ url, track }) {
+    if (!url.startsWith(`blob:chrome-extension://${chrome.runtime.id}/`))
+        throw new Error('Invalid recording URL');
+    try {
+        const id = await chrome.downloads.download({
+            url,
+            filename: downloadPath(track),
+            conflictAction: 'uniquify',
+            saveAs: false,
+        });
+        // Session storage survives service worker suspension.
+        await chrome.storage.session.set({
+            [`download:${id}`]: { url, track },
+        });
+        const [item] = await chrome.downloads.search({ id });
+        if (item && item.state !== 'in_progress')
+            await settleDownload(id, item.state, item.error);
+    } catch (error) {
+        await offscreen('releaseUrl', { url });
+        throw error;
+    }
+}
+async function settleDownload(id, state, error) {
+    const key = `download:${id}`;
+    const saved = (await chrome.storage.session.get(key))[key];
+    if (!saved) return;
+    await chrome.storage.session.remove(key);
+    await offscreen('releaseUrl', { url: saved.url });
+    if (state !== 'complete')
+        return reportError(`Download fehlgeschlagen: ${error || state}`);
+    const { songCount = 0 } = await chrome.storage.local.get('songCount');
+    await chrome.storage.local.set({ songCount: songCount + 1 });
+    broadcast('downloaded', { songCount: songCount + 1 });
+    chrome.notifications.create({
+        type: 'basic',
+        title: 'clipinc',
+        message: `${saved.track.artist} – ${saved.track.title} gespeichert`,
+        iconUrl: ICON_URL,
+    });
+}
+chrome.downloads.onChanged.addListener((delta) => {
+    if (!['complete', 'interrupted'].includes(delta.state?.current)) return;
+    downloadQueue = downloadQueue
+        .then(() =>
+            settleDownload(delta.id, delta.state.current, delta.error?.current),
+        )
+        .catch((error) => reportError(error.message));
+});
+// Register all routers at worker startup; never rely on per-session closures.
+chrome.runtime.onMessage.addListener((message, sender, respond) => {
+    const { command, data, target } = message;
+    if (target === 'offscreen' || target === 'popup') return;
+    if (command === 'exportDiagnostics' && !sender.tab) {
+        chrome.storage.local
+            .get(['captureDiagnostics', 'lastError'])
+            .then(async (diagnostics) => {
+                await chrome.downloads.download({
+                    url:
+                        'data:application/json;charset=utf-8,' +
+                        encodeURIComponent(
+                            JSON.stringify(
+                                {
+                                    build: 'capture-timeline-2',
+                                    exportedAt: new Date().toISOString(),
+                                    ...diagnostics,
+                                },
+                                null,
+                                2,
+                            ),
+                        ),
+                    filename: 'clipinc/diagnose.json',
+                    conflictAction: 'uniquify',
+                    saveAs: false,
+                });
+                respond({ success: true });
+            })
+            .catch((error) =>
+                respond({ success: false, error: error.message }),
+            );
+        return true;
+    }
+    if (command === 'startCapture') {
+        startCapture().then(
+            () => respond({ success: true }),
+            (error) => {
+                reportError(error.message);
+                respond({ success: false, error: error.message });
+            },
+        );
+        return true;
+    }
+    if (command === 'setStopAfterTrack' && !sender.tab) {
+        const request = mediaQueue.then(() =>
+            offscreen('setStopAfterTrack', data),
+        );
+        mediaQueue = request.catch(() => {});
+        request.then(respond, (error) =>
+            respond({ success: false, error: error.message }),
+        );
+        return true;
+    }
+    if (command === 'stopCapture') {
+        stopCapture().then(
+            () => respond({ success: true }),
+            (error) => respond({ success: false, error: error.message }),
+        );
+        return true;
+    }
+    if (
+        sender.tab &&
+        (command.startsWith('spotify') || command === 'setVolume')
+    ) {
+        // Preserve media-event order while reading the saved quality at song start.
+        mediaQueue = mediaQueue
+            .then(async () => {
+                let forwarded = data;
+                if (command === 'spotifyPlay' && data?.track) {
+                    const { recordingBitrate } =
+                        await chrome.storage.local.get('recordingBitrate');
+                    const kbps = [128, 192, 256, 320].includes(recordingBitrate)
+                        ? recordingBitrate
+                        : 256;
+                    forwarded = { ...data, track: { ...data.track, kbps } };
+                }
+                await offscreen('media', {
+                    command,
+                    data: forwarded,
+                    tabId: sender.tab.id,
+                });
+            })
+            .catch((error) => console.debug('clipinc media:', error.message));
         return;
     }
-
-    chrome.downloads.search({ id: delta.id }, (downloads) => {
-        if (downloads[0].filename.indexOf('clipinc') === -1) {
-            return;
-        }
-
-        chrome.downloads.erase({ id: delta.id });
-        chrome.downloads.onChanged.removeListener(cleanDownloadShelf);
-    });
-}
-
-//set icon to default
-function setDefaultIcon() {
-    chrome.browserAction.setIcon({
-        path: {
-            16: 'assets/images/clipinc-16.png',
-            32: 'assets/images/clipinc-32.png',
-            48: 'assets/images/clipinc-48.png',
-            128: 'assets/images/clipinc-128.png',
-        },
-    });
-}
-
-// set icon to recording
-function setRecordingIcon() {
-    chrome.browserAction.setIcon({
-        path: {
-            16: 'assets/images/clipinc-16-record.png',
-            32: 'assets/images/clipinc-32-record.png',
-            48: 'assets/images/clipinc-48-record.png',
-            128: 'assets/images/clipinc-128-record.png',
-        },
-    });
-}
-
-function reset() {
-    resetStorage();
-    setDefaultIcon();
-}
+    if (sender.url !== OFFSCREEN_URL) return;
+    if (command === 'lookupGenre') {
+        lookupGenre(data).then(respond);
+        return true;
+    }
+    if (command === 'captureState') {
+        chrome.storage.local.set(data);
+        icon(data.isRecording);
+        broadcast('spotifyPlay', { track: data.track });
+    }
+    if (command === 'captureStopped') restore(data);
+    if (command === 'captureDiagnostic') {
+        diagnosticQueue = diagnosticQueue
+            .then(async () => {
+                const { captureDiagnostics = [] } =
+                    await chrome.storage.local.get('captureDiagnostics');
+                captureDiagnostics.push({
+                    at: new Date().toISOString(),
+                    ...data,
+                });
+                await chrome.storage.local.set({
+                    captureDiagnostics: captureDiagnostics.slice(-100),
+                });
+            })
+            .catch((error) =>
+                console.warn('clipinc diagnostic:', error.message),
+            );
+    }
+    if (command === 'captureError') reportError(data.message);
+    if (command === 'downloadTrack') {
+        downloadQueue = downloadQueue
+            .then(() => downloadTrack(data))
+            .catch((error) => reportError(error.message));
+    }
+});
+chrome.tabs.onRemoved.addListener(async (id) => {
+    const { tabId } = await chrome.storage.local.get('tabId');
+    if (tabId === id) await stopCapture();
+});
+chrome.tabs.onUpdated.addListener(async (id, change) => {
+    const { tabId } = await chrome.storage.local.get('tabId');
+    if (id === tabId && change.status === 'loading') await stopCapture();
+});

@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+
 const CopyPlugin = require('copy-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
@@ -16,7 +17,11 @@ function getCommonConfig(env) {
     return {
         mode: isDevelopment ? 'development' : 'production',
         devtool: isDevelopment ? 'cheap-module-source-map' : false,
-        resolve: { extensions: ['.js', '.jsx', '.ts', '.tsx'] },
+
+        resolve: {
+            extensions: ['.js', '.jsx', '.ts', '.tsx'],
+        },
+
         module: {
             rules: [
                 {
@@ -30,71 +35,129 @@ function getCommonConfig(env) {
                 },
                 {
                     test: /\.(png|jpg|gif)$/i,
-                    use: [
-                        {
-                            loader: 'url-loader',
-                            options: {
-                                limit: 8192,
-                            },
+                    type: 'asset',
+                    parser: {
+                        dataUrlCondition: {
+                            maxSize: 8192,
                         },
-                    ],
+                    },
                 },
             ],
         },
-        plugins: [new MiniCssExtractPlugin()],
+
+        plugins: [
+            new MiniCssExtractPlugin(),
+        ],
     };
 }
 
 module.exports = [
     function popup(env) {
         return merge(getCommonConfig(env), {
-            entry: { popup: './popup/index.js' },
-            output: { path: path.join(outputPath, 'popup') },
+            entry: {
+                popup: './popup/index.js',
+            },
+
+            output: {
+                path: path.join(outputPath, 'popup'),
+            },
+
             plugins: [
                 new HtmlWebpackPlugin({
                     template: './popup/index.html',
                 }),
-                new MiniCssExtractPlugin(),
             ],
         });
     },
+
     function content(env) {
         return merge(getCommonConfig(env), {
             entry: {
                 content: './content/content.js',
                 inject: './content/inject.js',
             },
-            output: { path: path.join(outputPath, 'content') },
+
+            output: {
+                path: path.join(outputPath, 'content'),
+            },
+
             plugins: [
                 new CopyPlugin({
-                    patterns: [{ from: './content/slider.css', to: '.' }],
+                    patterns: [
+                        {
+                            from: './content/slider.css',
+                            to: '.',
+                        },
+                    ],
                 }),
             ],
         });
     },
+
     function backgroundPage(env) {
         return merge(getCommonConfig(env), {
-            entry: { background: './background-page/index.js' },
-            output: { path: path.join(outputPath, 'background-page') },
+            target: 'webworker',
+
+            entry: {
+                background: './background-page/index.js',
+            },
+
+            output: {
+                path: path.join(outputPath, 'background-page'),
+                publicPath: '',
+                globalObject: 'self',
+            },
+
             plugins: [
                 new CopyPlugin({
                     patterns: [
-                        { from: 'manifest.json', to: '../manifest.json' },
-                        { from: './assets/**/*', to: '..' },
                         {
-                            from: './_locales/**/*',
-                            to: '..',
+                            from: './manifest.json',
+                            to: path.join(outputPath, 'manifest.json'),
                         },
                         {
-                            from: './background-page/encoders/*',
-                            to: './encoders/[name][ext]',
+                            from: './assets',
+                            to: path.join(outputPath, 'assets'),
+                        },
+                        {
+                            from: './_locales',
+                            to: path.join(outputPath, '_locales'),
+                        },
+                        {
+                            // AudioWorklet modules must be separate files
+                            // (not bundled) and loaded via addModule(url).
+                            from: './background-page/RecorderWorklet.js',
+                            to: path.join(outputPath, 'background-page/RecorderWorklet.js'),
+                        },
+                        {
+                            // Offscreen document HTML – loaded by chrome.offscreen.createDocument
+                            from: './background-page/offscreen.html',
+                            to: path.join(outputPath, 'background-page/offscreen.html'),
+                        },
+                        {
+                            // Mp3Worker uses importScripts() with relative paths,
+                            // so the encoder files must sit next to the worker bundle.
+                            from: './background-page/encoders',
+                            to: path.join(outputPath, 'background-page/encoders'),
                         },
                     ],
                 }),
-                new HtmlWebpackPlugin({
-                    template: './background-page/index.html',
-                }),
             ],
+        });
+    },
+
+    // Offscreen document script – runs in a real browser page context (not a
+    // service worker), so it can use AudioContext, getUserMedia, etc.
+    function offscreen(env) {
+        return merge(getCommonConfig(env), {
+            entry: {
+                offscreen: './background-page/offscreen.js',
+            },
+
+            output: {
+                path: path.join(outputPath, 'background-page'),
+                publicPath: '',
+            },
         });
     },
 ];
