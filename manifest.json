@@ -1,10 +1,9 @@
 {
     "author": "Tobit.Software",
     "background": {
-        "page": "background-page/index.html",
-        "persistent": true
+        "service_worker": "background-page/background.js"
     },
-    "browser_action": {
+    "action": {
         "default_icon": {
             "16": "assets/images/clipinc-16.png",
             "32": "assets/images/clipinc-32.png",
@@ -15,9 +14,16 @@
     },
     "content_scripts": [
         {
+            "js": ["content/inject.js"],
+            "matches": ["https://open.spotify.com/*"],
+            "run_at": "document_start",
+            "world": "MAIN"
+        },
+        {
             "css": ["content/slider.css"],
             "js": ["content/content.js"],
-            "matches": ["https://open.spotify.com/*"]
+            "matches": ["https://open.spotify.com/*"],
+            "run_at": "document_start"
         }
     ],
     "default_locale": "de",
@@ -28,7 +34,7 @@
         "48": "assets/images/clipinc-48.png",
         "128": "assets/images/clipinc-128.png"
     },
-    "manifest_version": 2,
+    "manifest_version": 3,
     "name": "__MSG_name__",
     "permissions": [
         "tabs",
@@ -36,9 +42,11 @@
         "activeTab",
         "storage",
         "downloads",
-        "downloads.shelf",
-        "notifications"
+        "notifications",
+        "offscreen",
+        "declarativeNetRequestWithHostAccess"
     ],
     "version": "1.12.12",
-    "web_accessible_resources": ["content/inject.js"]
+    "minimum_chrome_version": "116",
+    "host_permissions": ["https://musicbrainz.org/*"]
 }

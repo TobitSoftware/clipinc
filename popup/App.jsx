@@ -4,6 +4,7 @@ import placeholderSrc from './placeholder.png';
 import { Recorder } from './recording-screen/Recorder';
 
 export function App() {
+    const [lastError, setLastError] = useState(null);
     const [showIntro, setShowIntro] = useState(true);
 
     const [isRecording, setIsRecording] = useState(false);
@@ -24,7 +25,7 @@ export function App() {
                       new Date(track.startTime) +
                       (track.progress || 0)) /
                       track.duration) *
-                      100
+                      100,
               )
             : 0;
 
@@ -47,7 +48,7 @@ export function App() {
                 setIsRecording(false);
             }
         },
-        [updateProgress]
+        [updateProgress],
     );
 
     useEffect(
@@ -61,14 +62,14 @@ export function App() {
                             if (
                                 !isRecording &&
                                 !tabs[0].url.includes(
-                                    'https://open.spotify.com'
+                                    'https://open.spotify.com',
                                 )
                             ) {
                                 setShowIntro(true);
                             } else {
                                 setShowIntro(false);
                             }
-                        }
+                        },
                     );
 
                     setIsRecording(isRecording);
@@ -82,10 +83,10 @@ export function App() {
                     if (track) {
                         updateTrack(track);
                     }
-                }
+                },
             );
         },
-        [updateTrack]
+        [updateTrack],
     );
 
     useEffect(
@@ -105,7 +106,7 @@ export function App() {
                                 } else {
                                     setIsRecording(false);
                                 }
-                            }
+                            },
                         );
                         break;
                     case 'spotifyAbort':
@@ -116,23 +117,26 @@ export function App() {
                         setSongCount(data.songCount);
                         break;
                     default:
-                        throw Error(`Unknown command received: ${command}`);
+                        // ignore unknown commands (e.g. stopCapture broadcast)
+                        break;
                 }
             });
         },
-        [updateProgress, updateTrack]
+        [updateProgress, updateTrack],
     );
 
     useEffect(
         function pollState() {
             const interval = window.setInterval(() => {
                 chrome.storage.local.get(
-                    ['isRecording', 'track'],
-                    ({ isRecording, track }) => {
+                    ['isRecording', 'track', 'lastError'],
+                    ({ isRecording, track, lastError }) => {
+                        setIsRecording(Boolean(isRecording));
+                        setLastError(lastError || null);
                         if (isRecording) {
                             updateProgress(track);
                         }
-                    }
+                    },
                 );
             }, 1000);
 
@@ -140,7 +144,7 @@ export function App() {
                 window.clearInterval(interval);
             };
         },
-        [updateProgress]
+        [updateProgress],
     );
 
     if (showIntro) {
@@ -148,15 +152,43 @@ export function App() {
     }
 
     return (
-        <Recorder
-            isRecording={isRecording}
-            songCount={songCount}
-            title={title}
-            artist={artist}
-            coverSrc={coverSrc}
-            onCoverLoadError={handleCoverLoadError}
-            progress={progress}
-            onRecordStateChange={setIsRecording}
-        />
+        <>
+            {lastError && (
+                <p role="alert" style={{ padding: 12, color: '#ffb4ab' }}>
+                    {lastError}
+                </p>
+            )}
+            <button
+                style={{ margin: 12 }}
+                onClick={() => {
+                    chrome.runtime.sendMessage(
+                        { command: 'exportDiagnostics' },
+                        (response) => {
+                            if (
+                                chrome.runtime.lastError ||
+                                !response?.success
+                            ) {
+                                setLastError(
+                                    response?.error ||
+                                        'Diagnose konnte nicht gespeichert werden.',
+                                );
+                            }
+                        },
+                    );
+                }}
+            >
+                Diagnose speichern
+            </button>
+            <Recorder
+                isRecording={isRecording}
+                songCount={songCount}
+                title={title}
+                artist={artist}
+                coverSrc={coverSrc}
+                onCoverLoadError={handleCoverLoadError}
+                progress={progress}
+                onRecordStateChange={setIsRecording}
+            />
+        </>
     );
 }

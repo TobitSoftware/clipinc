@@ -15,7 +15,8 @@
         "format": "prettier . --write",
         "format-staged": "pretty-quick --staged",
         "lint": "eslint . --ignore-path .gitignore",
-        "test": "jest"
+        "test": "jest",
+        "test:recording": "node --test tests/*.test.cjs"
     },
     "dependencies": {
         "@emotion/react": "^11.11.1",
